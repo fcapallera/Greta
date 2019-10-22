@@ -1,0 +1,15 @@
+1:
+Aquest text d'ajuda es mostrarà en el primer node i a continuació les opcions corresponents. Per sortir del viatge entre nodes de l'arbre escriu quelcom com: "exit, help, quit, abort, stop".
+Opció 1 : 2
+Opció 2 : 4
+#
+2:
+Ara estàs al node 2 perquè has triat l'opció 1. On vols anar ara?
+Anar cap al node 3 : 3
+#
+3:
+Has arribat al node 3, aquí pots anar a l'últim node (4) o tornar al node 2.
+Anar a l'últim node : 4
+#
+4:
+Has arribat a l'últim node "cul de sac". El programa detectarà que aquí no hi ha més opcions i et deixarà registrar-ne una de nova. Quedarà guardada en una base de dades nostra i ens assegurarem de mostrar-la a la següent versió de Greta.
