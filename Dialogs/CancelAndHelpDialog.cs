@@ -16,6 +16,7 @@ namespace CoreBot.Dialogs
         private const string noPermission = "Sorry, you don't have privilege to use this functionality.";
         protected readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
         public int PermissionLevel { get; set; } = 5;
+
         public CancelAndHelpDialog(string id, UserState userState)
             : base(id)
         {

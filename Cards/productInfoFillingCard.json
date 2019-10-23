@@ -1,0 +1,76 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "TextBlock",
+      "size": "Medium",
+      "weight": "Bolder",
+      "text": "Product Info filling Card",
+      "horizontalAlignment": "Center"
+    },
+    {
+      "type": "Input.Text",
+      "placeholder": "Product Name",
+      "style": "text",
+      "maxLength": 0,
+      "id": "ProdName"
+    },
+    {
+      "type": "Input.Text",
+      "placeholder": "Product Title",
+      "style": "Url",
+      "maxLength": 0,
+      "id": "ProdTitle"
+    },
+    {
+      "type": "Input.Text",
+      "placeholder": "Description",
+      "isMultiline": true,
+      "style": "Tel",
+      "maxLength": 0,
+      "id": "ProdDesc"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.ShowCard",
+      "title": "Add Store Info",
+      "card": {
+        "type": "AdaptiveCard",
+        "body": [
+          {
+            "type": "Input.Text",
+            "placeholder": "(optional) VitrosepStore URL",
+            "style": "text",
+            "maxLength": 0,
+            "id": "StoreURL"
+          },
+          {
+            "type": "Input.Text",
+            "placeholder": "(optional) Image URL",
+            "style": "text",
+            "maxLength": 0,
+            "id": "ImageURL"
+          }
+
+        ],
+        "actions": [
+          {
+            "type": "Action.Submit",
+            "title": "OK"
+          }
+        ],
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Submit",
+      "data": {
+        "id": "submitButton"
+      }
+    }
+  ]
+}
