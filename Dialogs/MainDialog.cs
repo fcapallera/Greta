@@ -6,7 +6,6 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,12 +15,11 @@ namespace CoreBot.Dialogs
 {
     public class MainDialog : ComponentDialog
     {
-        protected readonly ILogger Logger;
         protected IBotServices BotServices;
         private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
         private readonly IConfiguration Configuration;
 
-        public MainDialog(ILogger<MainDialog> logger, IBotServices botServices, TechnicalAssistanceDialog technicalAssistance,
+        public MainDialog(IBotServices botServices, TechnicalAssistanceDialog technicalAssistance,
             OrderProductDialog orderProduct, AskUserInfoDialog infoDialog, UserState userState, ConfirmOrderDialog confirmOrderDialog,
             IConfiguration configuration)
             : base(nameof(MainDialog))
