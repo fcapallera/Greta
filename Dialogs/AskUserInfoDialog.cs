@@ -41,7 +41,7 @@ namespace CoreBot.Dialogs
 
             var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
-            userProfile.name = name;
+            userProfile.Name = name;
 
             stepContext.Values["profile"] = userProfile;
 
@@ -68,8 +68,8 @@ namespace CoreBot.Dialogs
             var company = (string)stepContext.Result;
             var userProfile = (UserProfile)stepContext.Values["profile"];
 
-            userProfile.askedForUserInfo = true;
-            userProfile.company = company;
+            userProfile.AskedForUserInfo = true;
+            userProfile.Company = company;
             await _profileAccessor.SetAsync(stepContext.Context, userProfile, cancellationToken);
 
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text(finishMsg) }, cancellationToken);

@@ -47,7 +47,7 @@ namespace CoreBot.Dialogs
         {
             var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
-            if (!userProfile.askedForUserInfo)
+            if (!userProfile.AskedForUserInfo)
             {
                 return await stepContext.BeginDialogAsync(nameof(AskUserInfoDialog), cancellationToken);
             }
@@ -130,7 +130,7 @@ namespace CoreBot.Dialogs
         private Activity CreateCardFromProductInfo(IActivity activity, ProductInfo productInfo)
         {
             var processedDisplayText = productInfo.DisplayText.Replace("\\n", System.Environment.NewLine);
-            var card = new AdaptiveCard();
+            var card = new AdaptiveCard("1.0");
             if (productInfo.ImageURL != null)
                 card.Body.Add(new AdaptiveImage(url: productInfo.ImageURL));
 

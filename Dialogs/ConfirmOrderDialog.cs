@@ -14,24 +14,23 @@ namespace CoreBot.Dialogs
 {
     public class ConfirmOrderDialog : CancelAndHelpDialog
     {
-        private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
         private const string noOrderMsg = "Sorry, you need to order something first.";
         private const string ignoreOrder = "Your order is still pending, you can confirm, cancel or add more products!";
 
-        public ConfirmOrderDialog(UserState userState) : base(nameof(ConfirmOrderDialog))
+        public ConfirmOrderDialog(UserState userState) : base(nameof(ConfirmOrderDialog),userState)
         {
-            _profileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
-
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
+                CheckPermissionStepAsync,
                 CheckOrderStepAsync,
                 ShowCardStepAsync,
                 ProcessValueStepAsync,
                 FinalStepAsync
             }));
 
+            PermissionLevel = 3;
             InitialDialogId = nameof(WaterfallDialog);
         }
 
@@ -39,7 +38,7 @@ namespace CoreBot.Dialogs
         {
             var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
-            if (userProfile.productCart == null)
+            if (userProfile.ProductCart == null)
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(noOrderMsg), cancellationToken);
                 return await stepContext.EndDialogAsync();
@@ -97,7 +96,7 @@ namespace CoreBot.Dialogs
 
                 var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
-                userProfile.productCart = null;
+                userProfile.ProductCart = null;
 
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text("Your order was" + filling + "successfully!"), cancellationToken);
             }
@@ -122,15 +121,15 @@ namespace CoreBot.Dialogs
             //Primer editem el FactSet (informació de l'usuari que sortirà a la fitxa).
             var containerFact = (card.Body[1] as AdaptiveContainer);
             var factSet = (containerFact.Items[1] as AdaptiveFactSet);
-            factSet.Facts.Add(new AdaptiveFact("Ordered by:", userProfile.name));
-            factSet.Facts.Add(new AdaptiveFact("Company:", userProfile.company));
+            factSet.Facts.Add(new AdaptiveFact("Ordered by:", userProfile.Name));
+            factSet.Facts.Add(new AdaptiveFact("Company:", userProfile.Company));
 
             //Ara editarem la informació que sortirà dels productes
             var containerProducts = (card.Body[3] as AdaptiveContainer);
 
-            userProfile.productCart.Products.RemoveAll(item => item == null);
+            userProfile.ProductCart.Products.RemoveAll(item => item == null);
 
-            foreach (SingleOrder order in userProfile.productCart.Products)
+            foreach (SingleOrder order in userProfile.ProductCart.Products)
             {
                 AdaptiveColumnSet columns = new AdaptiveColumnSet();
                 AdaptiveColumn productColumn = new AdaptiveColumn();

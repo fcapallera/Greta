@@ -11,26 +11,24 @@ namespace CoreBot.Dialogs
 {
     public class OrderProductDialog : CancelAndHelpDialog
     {
-        private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
-
         private const string addToCartMsg = "Do you want to add the following product to your shopping cart?";
         private const string notAddedMsg = "The order was not added to your shopping cart.";
         private const string addedMsg = "Your order was successfully added to your shopping cart\nIf you want to view your shopping cart, say something like \"Let me see my shopping cart\" or \"I want to check out my order\".";
 
-        public OrderProductDialog(UserState userState) : base(nameof(OrderProductDialog))
+        public OrderProductDialog(UserState userState) : base(nameof(OrderProductDialog),userState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new TextPrompt("TextValidator",ValidateQuantityAsync));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
                {
+                   CheckPermissionStepAsync,
                    ProductStepAsync,
                    AmountStepAsync,
                    ConfirmAmountStepAsync,
                    AddToCartStepAsync,
                }));
 
-            _profileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
             InitialDialogId = nameof(WaterfallDialog);
         }
 
@@ -102,13 +100,13 @@ namespace CoreBot.Dialogs
             {
                 var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
-                if (userProfile.productCart == null)
+                if (userProfile.ProductCart == null)
                 {
-                    userProfile.productCart = new ProductCart(singleOrder);
+                    userProfile.ProductCart = new ProductCart(singleOrder);
                 }
                 else
                 {
-                    userProfile.productCart.AddOrder(singleOrder);
+                    userProfile.ProductCart.AddOrder(singleOrder);
                 }
 
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(addedMsg),cancellationToken);

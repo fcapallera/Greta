@@ -8,10 +8,12 @@ namespace CoreBot
 {
     public class UserProfile
     {
-        public string name { get; set; }
-        public string username { get; set; }
-        public ProductCart productCart { get; set; }
-        public bool askedForUserInfo { get; set; } = false;
-        public string company { get; set; }
+        public string Name { get; set; }
+        public string Username { get; set; }
+        public ProductCart ProductCart { get; set; }
+        public bool AskedForUserInfo { get; set; } = false;
+        public string Company { get; set; }
+
+        public int Permission { get; set; } = 5;
     }
 }

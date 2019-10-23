@@ -16,8 +16,8 @@ namespace CoreBot.Dialogs
 
         private IStatePropertyAccessor<ConversationData> _conversationDataAccessor;
 
-        public TechnicalAssistanceDialog(ConversationState conversationState)
-            : base(nameof(TechnicalAssistanceDialog))
+        public TechnicalAssistanceDialog(ConversationState conversationState, UserState userState)
+            : base(nameof(TechnicalAssistanceDialog),userState)
         {
             //_conversationDataAccessor = conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
 
