@@ -92,7 +92,10 @@ namespace CoreBot.Dialogs
                     var productInfo = luisResult.ToProductInfo(Configuration);
                     if (productInfo != null)
                     {
-                        var adaptiveCard = CreateCardFromProductInfo(stepContext.Context.Activity, productInfo);
+                        var attachment = CardUtils.CreateCardFromProductInfo(productInfo);
+                        var adaptiveCard = stepContext.Context.Activity.CreateReply();
+
+                        adaptiveCard.Attachments = new List<Attachment>() { attachment };
                         await stepContext.Context.SendActivityAsync(adaptiveCard, cancellationToken);
                     }
                     else
@@ -122,31 +125,6 @@ namespace CoreBot.Dialogs
             }
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
-        }
-
-
-
-        // FUNCIONS AUXILIARS ALIENES A LA DEFINICIÓ DEL FLUX DE CONVERSA
-        private Activity CreateCardFromProductInfo(IActivity activity, ProductInfo productInfo)
-        {
-            var processedDisplayText = productInfo.DisplayText.Replace("\\n", System.Environment.NewLine);
-            var card = new AdaptiveCard("1.0");
-            if (productInfo.ImageURL != null)
-                card.Body.Add(new AdaptiveImage(url: productInfo.ImageURL));
-
-            card.Body.Add(new AdaptiveTextBlock() { Text = productInfo.Title, Weight = AdaptiveTextWeight.Bolder });
-            card.Body.Add(new AdaptiveTextBlock() { Text = processedDisplayText });
-            if (productInfo.StoreURL != null)
-                card.Actions.Add(new AdaptiveOpenUrlAction() { Title = "More information", Url = new System.Uri(productInfo.StoreURL) });
-            var resposta = new Attachment()
-            {
-                ContentType = AdaptiveCard.ContentType,
-                Content = card
-            };
-            var response = ((Activity)activity).CreateReply();
-
-            response.Attachments = new List<Attachment>() { resposta };
-            return response;
         }
     }
 }

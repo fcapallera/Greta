@@ -3,7 +3,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using CoreBot.Interfaces;
+using CoreBot.Permission;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;

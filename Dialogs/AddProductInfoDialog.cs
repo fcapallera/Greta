@@ -2,12 +2,10 @@
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,9 +13,10 @@ namespace CoreBot.Dialogs
 {
     public class AddProductInfoDialog : CancelAndHelpDialog
     {
-        public AddProductInfoDialog(UserState userState) : base(nameof(AddProductInfoDialog), userState)
+        private readonly IConfiguration Configuration;
+        public AddProductInfoDialog(UserState userState, IConfiguration configuration) : base(nameof(AddProductInfoDialog), userState)
         {
-            AddDialog(new TextPrompt(nameof(TextPrompt), ValidateQuantityAsync));
+            AddDialog(new TextPrompt(nameof(TextPrompt), ValidateCardInputAsync));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 CheckPermissionStepAsync,
@@ -26,6 +25,7 @@ namespace CoreBot.Dialogs
 
             // VITROSEP and Superusers only
             PermissionLevel = 1;
+            Configuration = configuration;
         }
 
         private async Task<DialogTurnResult> PromptCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ namespace CoreBot.Dialogs
         }
 
 
-        private async Task<bool> ValidateQuantityAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        private async Task<bool> ValidateCardInputAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
             var jobject = JObject.Parse(promptContext.Context.Activity.Text);
 
