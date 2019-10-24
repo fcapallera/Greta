@@ -77,6 +77,7 @@ namespace CoreBot.Extensions
                 // Tanquem el reader i la connexió abans de sortir.
                 reader.Close();
                 connection.Close();
+                connection.Dispose();
             }
 
             return null;
