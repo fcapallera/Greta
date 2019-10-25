@@ -4,6 +4,7 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace CoreBot.Utilities
 {
@@ -32,7 +33,8 @@ namespace CoreBot.Utilities
         {
             string[] paths = { ".", "Cards", "confirmOrderCard.json" };
             var cardJson = File.ReadAllText(Path.Combine(paths));
-            var card = AdaptiveCard.FromJson(cardJson).Card;
+            var processedJson = AddGuidToJson(cardJson);
+            var card = AdaptiveCard.FromJson(processedJson).Card;
 
             //Ara hem convertit el JSON a un AdaptiveCard i editarem els fragments que ens interessen.
 
@@ -78,6 +80,16 @@ namespace CoreBot.Utilities
             };
 
             return attachment;
+        }
+
+        static public string AddGuidToJson(string json)
+        {
+            string regex = @"submitButton[0-9]";
+            Regex r = new Regex(regex);
+            Guid g = Guid.NewGuid();
+            var replaced = r.Replace(json, g.ToString());
+
+            return replaced;
         }
     }
 }

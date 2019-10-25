@@ -7,10 +7,12 @@ namespace CoreBot
 {
     public class ConversationData
     {
-        public NodeDecisio currentNode { get; set; }
+        public NodeDecisio CurrentNode { get; set; }
 
-        public bool startedTechSupport { get; set; } = false;
+        public bool StartedTechSupport { get; set; } = false;
 
-        public NodeDecisio rootNode { get; set; }
+        public NodeDecisio RootNode { get; set; }
+
+        public Dictionary<string, DateTime> DisabledCards { get; } = new Dictionary<string,DateTime>();
     }
 }

@@ -120,14 +120,16 @@
             {
               "type": "Action.Submit",
               "data": {
-                "action": "confirmOrder"
+                "action": "confirmOrder",
+                "id": "submitButton1"
               },
               "title": "Confirm Order"
             },
             {
               "type": "Action.Submit",
               "data": {
-                "action": "cancelOrder"
+                "action": "cancelOrder",
+                "id": "submitButton2"
               },
               "title": "Cancel Order"
             }

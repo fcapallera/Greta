@@ -14,12 +14,13 @@ using System.Threading.Tasks;
 
 namespace CoreBot.Dialogs
 {
-    public class AddProductInfoDialog : CancelAndHelpDialog
+    public class AddProductInfoDialog : CardDialog
     {
         private const string Preview = "Do you want to preview the Product you just added?";
         private readonly IConfiguration Configuration;
 
-        public AddProductInfoDialog(UserState userState, IConfiguration configuration) : base(nameof(AddProductInfoDialog), userState)
+        public AddProductInfoDialog(UserState userState, ConversationState conversationState, IConfiguration configuration) 
+            : base(nameof(AddProductInfoDialog), userState, conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt), ValidateCardInputAsync));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
@@ -27,6 +28,7 @@ namespace CoreBot.Dialogs
             {
                 CheckPermissionStepAsync,
                 PromptCardStepAsync,
+                DisableCardStepAsync,
                 ProcessResultStepAsync,
                 PromptProductCardAsync
             }));
@@ -42,7 +44,8 @@ namespace CoreBot.Dialogs
         {
             string[] paths = { ".", "Cards", "productInfoFillingCard.json" };
             var cardJson = File.ReadAllText(Path.Combine(paths));
-            var card = AdaptiveCard.FromJson(cardJson).Card;
+            var processedJson = CardUtils.AddGuidToJson(cardJson);
+            var card = AdaptiveCard.FromJson(processedJson).Card;
 
             var activity = new Activity
             {
@@ -68,6 +71,7 @@ namespace CoreBot.Dialogs
         private async Task<DialogTurnResult> ProcessResultStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var jobject = JObject.Parse((string)stepContext.Result);
+
             var productInfo = new ProductInfo
             {
                 Name = (string)jobject["ProdName"],

@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace CoreBot.Dialogs
 {
-    public class ConfirmOrderDialog : CancelAndHelpDialog
+    public class ConfirmOrderDialog : CardDialog
     {
         private const string noOrderMsg = "Sorry, you need to order something first.";
         private const string ignoreOrder = "Your order is still pending, you can confirm, cancel or add more products!";
 
-        public ConfirmOrderDialog(UserState userState) : base(nameof(ConfirmOrderDialog),userState)
+        public ConfirmOrderDialog(UserState userState, ConversationState conversationState) 
+            : base(nameof(ConfirmOrderDialog),userState, conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
@@ -23,6 +24,7 @@ namespace CoreBot.Dialogs
                 CheckPermissionStepAsync,
                 CheckOrderStepAsync,
                 ShowCardStepAsync,
+                DisableCardStepAsync,
                 ProcessValueStepAsync,
                 FinalStepAsync
             }));

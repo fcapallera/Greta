@@ -4,6 +4,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CoreBot.Bots
 {
@@ -13,6 +14,8 @@ namespace CoreBot.Bots
         private readonly Dialog Dialog;
         private readonly BotState _conversationState;
         private readonly BotState _userState;
+
+        private const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
 
         public GretaBot(ConversationState conversationState, UserState userState, T dialog)
         {
@@ -28,11 +31,25 @@ namespace CoreBot.Bots
             // If the message comes from an Adaptive Card we serialize the answer and send it as a message.
             if(string.IsNullOrWhiteSpace(activity.Text) && activity.Value != null)
             {
-                activity.Text = JsonConvert.SerializeObject(activity.Value);
-            }
+                var _conversationAccessor = _conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
+                var conversationData = await _conversationAccessor.GetAsync(turnContext, () => new ConversationData());
 
-            // Run the MainDialog, dispatch intent or continue current dialog.
-            await Dialog.RunAsync(turnContext, _conversationState.CreateProperty<DialogState>("DialogState"), cancellationToken);
+                var jobject = (JObject)activity.Value;
+
+                if (conversationData.DisabledCards.ContainsKey((string)jobject["id"]))
+                {
+                    await turnContext.SendActivityAsync(MessageFactory.Text(sameCardMsg), cancellationToken);
+                }
+                else
+                {
+                    activity.Text = JsonConvert.SerializeObject(activity.Value);
+                    await Dialog.RunAsync(turnContext, _conversationState.CreateProperty<DialogState>("DialogState"), cancellationToken);
+                }
+            }
+            else
+            {
+                await Dialog.RunAsync(turnContext, _conversationState.CreateProperty<DialogState>("DialogState"), cancellationToken);
+            }
 
             // Save any changes on the User/Conversation State.
             await _userState.SaveChangesAsync(turnContext);

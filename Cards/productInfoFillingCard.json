@@ -59,7 +59,10 @@
         "actions": [
           {
             "type": "Action.Submit",
-            "title": "OK"
+            "title": "OK",
+            "data": {
+              "id": "submitButton2"
+            }
           }
         ],
         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
@@ -69,7 +72,7 @@
       "type": "Action.Submit",
       "title": "Submit",
       "data": {
-        "id": "submitButton"
+        "id": "submitButton1"
       }
     }
   ]
