@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace CoreBot.Store
 {
     public class ProductCart
     {
-        public List<SingleOrder> Products { get; } = new List<SingleOrder>();
+        public List<SingleOrder> Products { get; }
 
         public ProductCart(SingleOrder singleOrder)
         {
-            Products.Add(singleOrder);
+            Products = new List<SingleOrder>
+            {
+                singleOrder
+            };
         }
 
         public void AddOrder(SingleOrder singleOrder)

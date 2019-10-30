@@ -54,6 +54,8 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddSingleton<ConfirmOrderDialog>();
 
+            services.AddSingleton<AddProductInfoDialog>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
