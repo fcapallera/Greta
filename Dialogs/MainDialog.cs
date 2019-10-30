@@ -1,5 +1,4 @@
-﻿using AdaptiveCards;
-using CoreBot.Extensions;
+﻿using CoreBot.Extensions;
 using CoreBot.Utilities;
 using Microsoft.Azure.CognitiveServices.Language.LUIS.Runtime.Models;
 using Microsoft.Bot.Builder;
@@ -7,6 +6,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,6 +122,11 @@ namespace CoreBot.Dialogs
                 case "AddProductInfo":
                     return await stepContext.BeginDialogAsync(nameof(AddProductInfoDialog), cancellationToken);
 
+                case "CheckProducts":
+                    string products = await GetProductNamesAsync(stepContext.Context);
+                    await stepContext.Context.SendActivityAsync(MessageFactory.Text(products), cancellationToken);
+                    break;
+
                 case "QnA":
                     var answer = (string)stepContext.Result;
                     await stepContext.Context.SendActivityAsync(MessageFactory.Text(answer), cancellationToken);
@@ -129,6 +134,42 @@ namespace CoreBot.Dialogs
             }
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
+        }
+
+
+        private async Task<string> GetProductNamesAsync(ITurnContext turnContext)
+        {
+            var userProfile = await _profileAccessor.GetAsync(turnContext, () => new UserProfile());
+
+            if (userProfile.Permission > 1)
+            {
+                return "Sorry, you don't have permission to use this feature.";
+            }
+            else
+            {
+                string connectionString = Configuration.GetConnectionString("DefaultConnection");
+                string query = "SELECT ProductName FROM [dbo].[ProductInfo]";
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
+
+                    connection.Open();
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    string products = "This is the list of products in the DataBase:\n";
+
+                    while (reader.Read())
+                    {
+                        products += $"- {reader.GetString(0)}\n";
+                    }
+
+                    reader.Close();
+                    connection.Close();
+
+                    return products;
+                }
+            }
         }
     }
 }

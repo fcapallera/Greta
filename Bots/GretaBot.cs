@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
@@ -14,8 +15,6 @@ namespace CoreBot.Bots
         private readonly Dialog Dialog;
         private readonly BotState _conversationState;
         private readonly BotState _userState;
-
-        private const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
 
         public GretaBot(ConversationState conversationState, UserState userState, T dialog)
         {
@@ -38,7 +37,7 @@ namespace CoreBot.Bots
 
                 if (conversationData.DisabledCards.ContainsKey((string)jobject["id"]))
                 {
-                    await turnContext.SendActivityAsync(MessageFactory.Text(sameCardMsg), cancellationToken);
+                    await turnContext.SendActivityAsync(MessageFactory.Text(CardUtils.sameCardMsg), cancellationToken);
                 }
                 else
                 {

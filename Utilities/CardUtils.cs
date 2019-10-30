@@ -10,6 +10,7 @@ namespace CoreBot.Utilities
 {
     public static class CardUtils
     {
+        public const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
         public static Attachment CreateCardFromProductInfo(ProductInfo productInfo)
         {
             var processedDisplayText = productInfo.DisplayText.Replace("\\n", Environment.NewLine);
