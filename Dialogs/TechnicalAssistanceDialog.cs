@@ -33,7 +33,7 @@ namespace CoreBot.Dialogs
                 }));
 
             InitialDialogId = nameof(WaterfallDialog);
-
+            PermissionLevel = CUSTOMERS;
             _conversationDataAccessor = conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
         }
 

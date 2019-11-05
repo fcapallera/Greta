@@ -36,7 +36,7 @@ namespace CoreBot.Dialogs
             InitialDialogId = nameof(WaterfallDialog);
 
             // VITROSEP and Superusers only
-            PermissionLevel = 5;
+            PermissionLevel = VITROSEP;
             Configuration = configuration;
         }
 

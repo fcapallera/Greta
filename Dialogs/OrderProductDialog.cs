@@ -30,7 +30,7 @@ namespace CoreBot.Dialogs
                }));
 
             InitialDialogId = nameof(WaterfallDialog);
-            PermissionLevel = 3;
+            PermissionLevel = REPRESENTATIVE;
         }
 
         private async Task<DialogTurnResult> ProductStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)

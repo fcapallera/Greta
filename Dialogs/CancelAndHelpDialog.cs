@@ -12,6 +12,14 @@ namespace CoreBot.Dialogs
 {
     public class CancelAndHelpDialog : ComponentDialog, IPermissionObject
     {
+        // Permission levels
+        protected const int SUPERUSER = 0;
+        protected const int VITROSEP = 1;
+        protected const int CUSTOMERS = 2;
+        protected const int REPRESENTATIVE = 3;
+        protected const int LEAD = 4;
+        protected const int UNREGISTERED = 5;
+
         protected const string whatElse = "What else can I do for you today?";
         private const string noPermission = "Sorry, you don't have privilege to use this functionality.";
         protected readonly IStatePropertyAccessor<UserProfile> _profileAccessor;

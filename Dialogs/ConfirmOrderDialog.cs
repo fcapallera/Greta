@@ -29,7 +29,7 @@ namespace CoreBot.Dialogs
                 FinalStepAsync
             }));
 
-            PermissionLevel = 3;
+            PermissionLevel = REPRESENTATIVE;
             InitialDialogId = nameof(WaterfallDialog);
         }
 
