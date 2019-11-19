@@ -1,4 +1,5 @@
 ﻿using CoreBot.Extensions;
+using CoreBot.Store;
 using CoreBot.Utilities;
 using Microsoft.Azure.CognitiveServices.Language.LUIS.Runtime.Models;
 using Microsoft.Bot.Builder;
@@ -18,6 +19,7 @@ namespace CoreBot.Dialogs
         protected IBotServices BotServices;
         private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
         private readonly IConfiguration Configuration;
+        private readonly IPrestashopApi PrestashopApi;
 
         public MainDialog(IBotServices botServices, TechnicalAssistanceDialog technicalAssistance,
             OrderProductDialog orderProduct, AskUserInfoDialog infoDialog, UserState userState, ConfirmOrderDialog confirmOrderDialog,

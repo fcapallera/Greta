@@ -29,7 +29,7 @@ namespace CoreBot.Store.Entity
         public int Id { get; set; }
 
         [XmlAttribute("href", Namespace ="http://www.w3.org/1999/xlink")]
-        public string Url { get; }
+        public string Url { get; set; }
 
         [XmlText]
         public string Text { get; set; }

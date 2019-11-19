@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using CoreBot.Bots;
 using CoreBot;
 using CoreBot.Dialogs;
+using Refit;
+using CoreBot.Store;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -59,9 +61,18 @@ namespace Microsoft.BotBuilderSamples
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
-
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, GretaBot<MainDialog>>();
+
+            var apiUrl = Configuration.GetSection("PrestashopSettings").GetSection("ApiUrl").Value;
+
+            // Afegim la API i li donem una configuració.
+            services.AddRefitClient<IPrestashopApi>(
+                new RefitSettings
+                {
+                    ContentSerializer = new XmlContentSerializer()
+                })
+                .ConfigureHttpClient(c => c.BaseAddress = new System.Uri(apiUrl));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
