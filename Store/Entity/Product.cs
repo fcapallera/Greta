@@ -6,16 +6,40 @@ using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    [XmlRoot("prestashop")]
     public class Product
+    {
+        [XmlElement("id")]
+        public int Id { get; set; }
+
+        [XmlElement("id_default_image")]
+        public string Image { get; set; }
+
+        [XmlArray("name")]
+        [XmlArrayItem("language", typeof(Language))]
+        public Language[] Name { get; set; }
+
+        [XmlArray("description")]
+        [XmlArrayItem("language", typeof(Language))]
+        public Language[] Description { get; set; }
+    }
+
+    public class Language
     {
         [XmlAttribute("id")]
         public int Id { get; set; }
 
-        [XmlAttribute("id_manufacturer")]
-        public int ManufacturerId { get; set; }
+        [XmlAttribute("href", Namespace ="http://www.w3.org/1999/xlink")]
+        public string Url { get; }
 
-        [XmlAttribute("id_supplier")]
-        public int SupplierId { get; set; }
+        [XmlText]
+        public string Text { get; set; }
+    }
+
+    [XmlRoot("prestashop")]
+    public class ProductCollection
+    {
+        [XmlArray("products")]
+        [XmlArrayItem("product", typeof(Product))]
+        public Product[] Products { get; set; }
     }
 }
