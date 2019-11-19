@@ -12,7 +12,7 @@ namespace CoreBot.Store.Entity
         public int Id { get; set; }
 
         [XmlElement("id_default_image")]
-        public string Image { get; set; }
+        public Image Image { get; set; }
 
         [XmlArray("name")]
         [XmlArrayItem("language", typeof(Language))]
@@ -33,6 +33,18 @@ namespace CoreBot.Store.Entity
 
         [XmlText]
         public string Text { get; set; }
+    }
+
+    public class Image
+    {
+        [XmlAttribute("href", Namespace = "http://www.w3.org/1999/xlink")]
+        public string Url { get; set; }
+
+        [XmlAttribute("notFilterable")]
+        public bool Filterable { get; set; }
+
+        [XmlText]
+        public string ImageId { get; set; }
     }
 
     [XmlRoot("prestashop")]

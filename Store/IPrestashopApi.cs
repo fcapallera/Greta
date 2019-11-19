@@ -9,7 +9,7 @@ namespace CoreBot.Store
 {
     public interface IPrestashopApi
     {
-        [Get("/products?display=[id,name,description,id_default_image]&filter[name]=%{product}%")]
-        Task<Product> GetProductByName(string product);
+        [Get("/products?display=[id,name,description,id_default_image]&filter[name]=%[{product}]%")]
+        Task<ProductCollection> GetProductByName(string product);
     }
 }
