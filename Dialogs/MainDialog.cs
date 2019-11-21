@@ -52,7 +52,7 @@ namespace CoreBot.Dialogs
 
             if (!userProfile.AskedForUserInfo)
             {
-                return await stepContext.BeginDialogAsync(nameof(AskUserInfoDialog), cancellationToken);
+                return await stepContext.BeginDialogAsync(nameof(AskUserInfoDialog), null, cancellationToken);
             }
 
             return await stepContext.NextAsync(null,cancellationToken);

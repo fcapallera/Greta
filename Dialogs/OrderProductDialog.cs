@@ -4,33 +4,45 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using CoreBot.Store;
+using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
 
 namespace CoreBot.Dialogs
 {
-    public class OrderProductDialog : CancelAndHelpDialog
+    public class OrderProductDialog : CardDialog
     {
         private const string addToCartMsg = "Do you want to add the following product to your shopping cart?";
         private const string notAddedMsg = "The order was not added to your shopping cart.";
         private const string addedMsg = "Your order was successfully added to your shopping cart\nIf you want to view your shopping cart, say something like \"Let me see my shopping cart\" or \"I want to check out my order\".";
+        private const string chooseMsg = "Choose one of these products from the carousel.";
+        private readonly IPrestashopApi PrestashopApi;
+        private readonly IConfiguration Configuration;
 
-        public OrderProductDialog(UserState userState) : base(nameof(OrderProductDialog),userState)
+        public OrderProductDialog(UserState userState, ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration) 
+            : base(nameof(OrderProductDialog),userState,conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
-            AddDialog(new TextPrompt("TextValidator",ValidateQuantityAsync));
+            AddDialog(new TextPrompt("TextValidator", ValidateQuantityAsync));
+            AddDialog(new TextPrompt("ProductValidator", ValidateProductAsync));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
                {
                    CheckPermissionStepAsync,
                    ProductStepAsync,
+                   SelectionCardStepAsync,
+                   DisableCardStepAsync,
                    AmountStepAsync,
                    ConfirmAmountStepAsync,
                    AddToCartStepAsync,
                }));
 
             InitialDialogId = nameof(WaterfallDialog);
-            PermissionLevel = REPRESENTATIVE;
+            PermissionLevel = UNREGISTERED;
+            PrestashopApi = prestashopApi;
+            Configuration = configuration;
         }
 
         private async Task<DialogTurnResult> ProductStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -45,6 +57,22 @@ namespace CoreBot.Dialogs
             {
                 return await stepContext.NextAsync(singleOrder.Product, cancellationToken);
             }
+        }
+
+        private async Task<DialogTurnResult> SelectionCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var product = (string)stepContext.Result;
+
+            var products = await PrestashopApi.GetProductByName(product);
+
+            var reply = stepContext.Context.Activity.CreateReply();
+            reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
+            var attachments = CardUtils.CarouselFromProducts(products,Configuration);
+            foreach (Attachment card in attachments) {  reply.Attachments.Add(card); }
+
+            await stepContext.Context.SendActivityAsync(MessageFactory.Text(chooseMsg), cancellationToken);
+            await stepContext.Context.SendActivityAsync(reply,cancellationToken);
+            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("")});
         }
 
         private async Task<DialogTurnResult> AmountStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -122,12 +150,17 @@ namespace CoreBot.Dialogs
             return await stepContext.EndDialogAsync((bool)stepContext.Result, cancellationToken);
         }
 
+        private async Task<bool> ValidateProductAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            var product = promptContext.Context.Activity.Text;
+            var collection = await PrestashopApi.GetProductByName(product);
+            return await Task.FromResult(collection.Products.Length == 0);
+        }
 
         private Task<bool> ValidateQuantityAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
             bool result = false;
-            int number;
-            if(int.TryParse(promptContext.Context.Activity.Text, out number))
+            if (int.TryParse(promptContext.Context.Activity.Text, out int number))
             {
                 result = true;
             }

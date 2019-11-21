@@ -21,6 +21,26 @@ namespace CoreBot.Store.Entity
         [XmlArray("description")]
         [XmlArrayItem("language", typeof(Language))]
         public Language[] Description { get; set; }
+
+        public string GetNameByLanguage(int language)
+        {
+            foreach(Language l in Name)
+            {
+                if (l.Id == language) return l.Text;
+            }
+
+            return "";
+        }
+
+        public string GetDescriptionByLanguage(int language)
+        {
+            foreach (Language l in Description)
+            {
+                if (l.Id == language) return l.Text;
+            }
+
+            return "";
+        }
     }
 
     public class Language
