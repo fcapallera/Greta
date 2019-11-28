@@ -65,17 +65,17 @@ namespace CoreBot.Dialogs
             var recognizerResult = await BotServices.Dispatch.RecognizeAsync(stepContext.Context, cancellationToken);
 
             //El top intent ens dirà quin servei farem servir
-            var topIntent = recognizerResult.GetTopScoringIntent();
+            var (intent, score) = recognizerResult.GetTopScoringIntent();
 
             var results = await BotServices.QnA.GetAnswersAsync(stepContext.Context);
-            if (results.Any() && (results.First().Score > topIntent.score) || topIntent.intent == "None")
+            if (results.Any() && (results.First().Score > score) || intent == "None")
             {
                 stepContext.Values["Intent"] = "QnA";
                 return await stepContext.NextAsync(results.First().Answer, cancellationToken);
             }
             else
             {
-                stepContext.Values["Intent"] = topIntent.intent;
+                stepContext.Values["Intent"] = intent;
                 return await stepContext.NextAsync(recognizerResult, cancellationToken);
             }
         }

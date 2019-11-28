@@ -33,4 +33,17 @@ namespace CoreBot.Store.Entity
             set { this.UpdateDate = DateTime.Parse(value); }
         }
     }
+
+    [XmlRoot("prestashop")]
+    public class CustomerCollection
+    {
+        [XmlArray("customers")]
+        [XmlArrayItem("customer", typeof(Customer))]
+        public Customer[] Customers { get; set; }
+
+        public Customer First()
+        {
+            return Customers.Length > 0 ? Customers[0] : null;
+        }
+    }
 }
