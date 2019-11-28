@@ -166,6 +166,7 @@ namespace CoreBot.Dialogs
                         products += $"- {reader.GetString(0)}\n";
                     }
 
+                    command.Dispose();
                     reader.Close();
                     connection.Close();
 
