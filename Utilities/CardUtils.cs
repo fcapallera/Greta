@@ -1,9 +1,13 @@
 ﻿using AdaptiveCards;
 using CoreBot.Store;
+using CoreBot.Store.Entity;
 using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CoreBot.Utilities
@@ -11,6 +15,8 @@ namespace CoreBot.Utilities
     public static class CardUtils
     {
         public const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
+        private const int ENGLISH = 7;
+
         public static Attachment CreateCardFromProductInfo(ProductInfo productInfo)
         {
             var processedDisplayText = productInfo.DisplayText.Replace("\\n", Environment.NewLine);
@@ -28,6 +34,39 @@ namespace CoreBot.Utilities
                 Content = card
             };
             return resposta;
+        }
+
+
+        public static List<Attachment> CarouselFromProducts(ProductCollection collection, IConfiguration configuration)
+        {
+            List<Product> products = collection.Products.ToList();
+            List<Attachment> attachments = new List<Attachment>();
+            var apiKey = configuration.GetSection("PrestashopSettings").GetSection("ApiKey").Value;
+            Guid guid = Guid.NewGuid();
+            int index = 0;
+
+
+            foreach(Product product in products)
+            {
+                var heroCard = new HeroCard
+                {
+                    Title = $"<b>{product.GetNameByLanguage(ENGLISH)}</b>",
+                    Text = product.GetDescriptionByLanguage(ENGLISH),
+                    Images = new List<CardImage> { new CardImage(product.Image.Url+"?ws_key="+apiKey) },
+                    Buttons = new List<CardAction> { new CardAction {
+                        Type = ActionTypes.PostBack,
+                        Title = "Choose", 
+                        Value = $@"{{ ""id"" : ""{guid.ToString()}"", ""action"" : ""{index}""}}"
+                        }
+                    }
+                };
+
+                attachments.Add(heroCard.ToAttachment());
+
+                index++;
+            }
+
+            return attachments;
         }
 
         public static Attachment CreateCardFromOrder(UserProfile userProfile)

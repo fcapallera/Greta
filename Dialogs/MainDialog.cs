@@ -1,4 +1,5 @@
 ﻿using CoreBot.Extensions;
+using CoreBot.Store;
 using CoreBot.Utilities;
 using Microsoft.Azure.CognitiveServices.Language.LUIS.Runtime.Models;
 using Microsoft.Bot.Builder;
@@ -18,6 +19,7 @@ namespace CoreBot.Dialogs
         protected IBotServices BotServices;
         private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
         private readonly IConfiguration Configuration;
+        private readonly IPrestashopApi PrestashopApi;
 
         public MainDialog(IBotServices botServices, TechnicalAssistanceDialog technicalAssistance,
             OrderProductDialog orderProduct, AskUserInfoDialog infoDialog, UserState userState, ConfirmOrderDialog confirmOrderDialog,
@@ -50,7 +52,7 @@ namespace CoreBot.Dialogs
 
             if (!userProfile.AskedForUserInfo)
             {
-                return await stepContext.BeginDialogAsync(nameof(AskUserInfoDialog), cancellationToken);
+                return await stepContext.BeginDialogAsync(nameof(AskUserInfoDialog), null, cancellationToken);
             }
 
             return await stepContext.NextAsync(null,cancellationToken);
@@ -63,17 +65,17 @@ namespace CoreBot.Dialogs
             var recognizerResult = await BotServices.Dispatch.RecognizeAsync(stepContext.Context, cancellationToken);
 
             //El top intent ens dirà quin servei farem servir
-            var topIntent = recognizerResult.GetTopScoringIntent();
+            var (intent, score) = recognizerResult.GetTopScoringIntent();
 
             var results = await BotServices.QnA.GetAnswersAsync(stepContext.Context);
-            if (results.Any() && (results.First().Score > topIntent.score) || topIntent.intent == "None")
+            if (results.Any() && (results.First().Score > score) || intent == "None")
             {
                 stepContext.Values["Intent"] = "QnA";
                 return await stepContext.NextAsync(results.First().Answer, cancellationToken);
             }
             else
             {
-                stepContext.Values["Intent"] = topIntent.intent;
+                stepContext.Values["Intent"] = intent;
                 return await stepContext.NextAsync(recognizerResult, cancellationToken);
             }
         }
@@ -164,6 +166,7 @@ namespace CoreBot.Dialogs
                         products += $"- {reader.GetString(0)}\n";
                     }
 
+                    command.Dispose();
                     reader.Close();
                     connection.Close();
 
