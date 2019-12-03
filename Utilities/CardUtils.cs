@@ -15,7 +15,7 @@ namespace CoreBot.Utilities
     public static class CardUtils
     {
         public const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
-        private const int ENGLISH = 7;
+        public const int ENGLISH = 7;
 
         public static Attachment CreateCardFromProductInfo(ProductInfo productInfo)
         {
@@ -71,10 +71,7 @@ namespace CoreBot.Utilities
 
         public static Attachment CreateCardFromOrder(UserProfile userProfile)
         {
-            string[] paths = { ".", "Cards", "confirmOrderCard.json" };
-            var cardJson = File.ReadAllText(Path.Combine(paths));
-            var processedJson = AddGuidToJson(cardJson);
-            var card = AdaptiveCard.FromJson(processedJson).Card;
+            var card = CreateCardFromJson("confirmOrderCard");
 
             //Ara hem convertit el JSON a un AdaptiveCard i editarem els fragments que ens interessen.
 
@@ -120,6 +117,23 @@ namespace CoreBot.Utilities
             };
 
             return attachment;
+        }
+
+        static public AdaptiveCard CreateCardFromJson(string json)
+        {
+            string[] paths = { ".", "Cards", json+".json" };
+            var cardJson = File.ReadAllText(Path.Combine(paths));
+            var processedJson = AddGuidToJson(cardJson);
+            return AdaptiveCard.FromJson(processedJson).Card;
+        }
+
+        static public Attachment AdaptiveCardToAttachment(AdaptiveCard card)
+        {
+            return new Attachment
+            {
+                Content = card,
+                ContentType = "application/vnd.microsoft.card.adaptive"
+            };
         }
 
         static public string AddGuidToJson(string json)
