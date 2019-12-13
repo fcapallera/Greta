@@ -23,7 +23,7 @@ namespace CoreBot.Dialogs
 
         public MainDialog(IBotServices botServices, TechnicalAssistanceDialog technicalAssistance,
             OrderProductDialog orderProduct, AskUserInfoDialog infoDialog, UserState userState, ConfirmOrderDialog confirmOrderDialog,
-            AddProductInfoDialog addProductInfoDialog, IConfiguration configuration)
+            AddProductInfoDialog addProductInfoDialog, UserValidationDialog userValidationDialog, IConfiguration configuration)
             : base(nameof(MainDialog))
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
@@ -32,6 +32,7 @@ namespace CoreBot.Dialogs
             AddDialog(infoDialog);
             AddDialog(confirmOrderDialog);
             AddDialog(addProductInfoDialog);
+            AddDialog(userValidationDialog);
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 WelcomeStepAsync,
@@ -128,6 +129,9 @@ namespace CoreBot.Dialogs
                     string products = await GetProductNamesAsync(stepContext.Context);
                     await stepContext.Context.SendActivityAsync(MessageFactory.Text(products), cancellationToken);
                     break;
+
+                case "ValidateUser":
+                    return await stepContext.BeginDialogAsync(nameof(UserValidationDialog), null, cancellationToken);
 
                 case "QnA":
                     var answer = (string)stepContext.Result;
