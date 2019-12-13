@@ -2,20 +2,17 @@
 using CoreBot.Utilities;
 using Microsoft.Bot.Schema;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    public class Product : IAttachable
+    public class Product : IImageAttachable
     {
         [XmlElement("id")]
-        public int Id { get; set; }
+        public override int Id { get; set; }
 
         [XmlElement("id_default_image")]
-        public Image Image { get; set; }
+        public override Image Image { get; set; }
 
         [XmlArray("name")]
         [XmlArrayItem("language", typeof(Language))]
@@ -48,11 +45,7 @@ namespace CoreBot.Store.Entity
         public override AdaptiveCard ToAdaptiveCard()
         {
             var card = new AdaptiveCard("1.0");
-            card.Body.Add(new AdaptiveImage
-            {
-                Url = new Uri(Image.Url)
-            });
-            card.Body.Add(new AdaptiveTextBlock
+            card.Body.Add(new AdaptiveTextBlock()
             {
                 Text = GetNameByLanguage(CardUtils.ENGLISH),
                 Weight = AdaptiveTextWeight.Bolder
@@ -88,7 +81,7 @@ namespace CoreBot.Store.Entity
     }
 
     [XmlRoot("prestashop")]
-    public class ProductCollection : Carouselable<Product>
+    public class ProductCollection : ImageCarouselable<Product>
     {
         [XmlArray("products")]
         [XmlArrayItem("product", typeof(Product))]

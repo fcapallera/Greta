@@ -1,35 +1,20 @@
 ﻿using AdaptiveCards;
-using CoreBot.Store.Entity;
 using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store
 {
     /// <summary>
-    /// A container whose elements can be displayed in a carousel of attachments.
+    /// A container whose elements can be displayed in a carousel of attachments which get their images from Prestashop Urls.
     /// </summary>
-    public class Carouselable<T> where T : IAttachable
+    public class ImageCarouselable<T> : Carouselable<T> where T : IImageAttachable
     {
-        [XmlIgnore]
-        public T[] Elements { get; set; }
-
-        public Attachment[] ToCarousel()
-        {
-            int i = 0;
-            List<Attachment> attachments = new List<Attachment>();
-
-            while (i < Elements.Length)
-            {
-                attachments.Add(Elements[i].ToAttachment());
-                i++;
-            }
-
-            return attachments.ToArray();
-        }
-
-        public Attachment[] ToSelectionCarousel()
+        public Attachment[] ToSelectionCarousel(IConfiguration configuration)
         {
             int i = 0;
             List<Attachment> attachments = new List<Attachment>();
@@ -37,7 +22,7 @@ namespace CoreBot.Store
 
             while (i < Elements.Length)
             {
-                var card = Elements[i].ToAdaptiveCard();
+                var card = Elements[i].ToImageAdaptiveCard(configuration);
                 card.Actions.Add(new AdaptiveSubmitAction
                 {
                     Title = "SELECT",
@@ -55,11 +40,6 @@ namespace CoreBot.Store
             }
 
             return attachments.ToArray();
-        }
-
-        public T First()
-        {
-            return Elements.Length > 0 ? Elements[0] : null;
         }
     }
 }
