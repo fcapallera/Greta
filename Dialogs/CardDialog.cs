@@ -1,4 +1,5 @@
-﻿using Microsoft.Bot.Builder;
+﻿using CoreBot.Utilities;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Newtonsoft.Json.Linq;
 using System;
@@ -19,11 +20,12 @@ namespace CoreBot.Dialogs
         {
             var conversationData = await _conversationAccessor.GetAsync(stepContext.Context, () => new ConversationData());
 
-            var jobject = JObject.Parse((string)stepContext.Result);
-
-            var guid = (string)jobject["id"];
-
-            conversationData.DisabledCards.Add(guid, DateTime.Now);
+            var result = (string)stepContext.Result;
+            if (result.StartsWith('{'))
+            {
+                var guid = CardUtils.GetGuidFromResult(result);
+                conversationData.DisabledCards.Add(guid, DateTime.Now);
+            }
 
             return await stepContext.NextAsync(stepContext.Result, cancellationToken);
         }
