@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using AdaptiveCards;
+using CoreBot.Utilities;
+using Microsoft.Bot.Schema;
+using System;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    public class Product
+    public class Product : IImageAttachable
     {
         [XmlElement("id")]
-        public int Id { get; set; }
+        public override int Id { get; set; }
 
         [XmlElement("id_default_image")]
-        public Image Image { get; set; }
+        public override Image Image { get; set; }
 
         [XmlArray("name")]
         [XmlArrayItem("language", typeof(Language))]
@@ -41,6 +41,19 @@ namespace CoreBot.Store.Entity
 
             return "";
         }
+
+        public override AdaptiveCard ToAdaptiveCard()
+        {
+            var card = new AdaptiveCard("1.0");
+            card.Body.Add(new AdaptiveTextBlock()
+            {
+                Text = GetNameByLanguage(CardUtils.ENGLISH),
+                Weight = AdaptiveTextWeight.Bolder
+            });
+            card.Body.Add(new AdaptiveTextBlock(GetDescriptionByLanguage(CardUtils.ENGLISH)));
+
+            return card;
+        }
     }
 
     public class Language
@@ -68,10 +81,14 @@ namespace CoreBot.Store.Entity
     }
 
     [XmlRoot("prestashop")]
-    public class ProductCollection
+    public class ProductCollection : ImageCarouselable<Product>
     {
         [XmlArray("products")]
         [XmlArrayItem("product", typeof(Product))]
-        public Product[] Products { get; set; }
+        public Product[] Products 
+        {
+            get { return Elements; }
+            set { Elements = value; }
+        }
     }
 }

@@ -15,6 +15,8 @@ using Refit;
 using CoreBot.Store;
 using System;
 using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
+using CoreBot.Models;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -49,7 +51,6 @@ namespace Microsoft.BotBuilderSamples
             // Creem un ConversationState que ens ajudarà amb els nodes de conversa del TechSupport.
             services.AddSingleton<ConversationState>();
 
-            // Afegim el diàleg de suport tècnic
             services.AddSingleton<TechnicalAssistanceDialog>();
 
             services.AddSingleton<AskUserInfoDialog>();
@@ -59,6 +60,8 @@ namespace Microsoft.BotBuilderSamples
             services.AddSingleton<ConfirmOrderDialog>();
 
             services.AddSingleton<AddProductInfoDialog>();
+
+            services.AddSingleton<UserValidationDialog>();
 
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
@@ -79,7 +82,9 @@ namespace Microsoft.BotBuilderSamples
                 })
                 .ConfigureHttpClient((c) => c.BaseAddress = new Uri(storeUrl))
                 .ConfigureHttpClient((c) => c.DefaultRequestHeaders.Add("Authorization", "Basic " + encoded));
-                
+
+            services.AddDbContext<GretaDBContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

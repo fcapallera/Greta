@@ -1,4 +1,5 @@
-﻿using Microsoft.Bot.Builder;
+﻿using CoreBot.Extensions;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
@@ -65,7 +66,7 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> OptionalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var nodeActual = (NodeDecisio)stepContext.Values["Node"];
+            var nodeActual = stepContext.GetValue<NodeDecisio>("Node");
             if(nodeActual.fills.Count == 0)
             {
                 var result = (bool)stepContext.Result;

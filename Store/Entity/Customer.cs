@@ -1,12 +1,13 @@
-﻿using System;
+﻿using AdaptiveCards;
+using System;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    public class Customer
+    public class Customer : IAttachable
     {
         [XmlElement("id")]
-        public int Id { get; set; }
+        public override int Id { get; set; }
 
         [XmlElement("passwd")]
         public string Password { get; set; }
@@ -29,21 +30,36 @@ namespace CoreBot.Store.Entity
         [XmlElement("date_upd")]
         public string UpdateDateString
         {
-            get { return this.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"); }
-            set { this.UpdateDate = DateTime.Parse(value); }
+            get { return UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"); }
+            set { UpdateDate = DateTime.Parse(value); }
+        }
+
+        public override AdaptiveCard ToAdaptiveCard()
+        {
+            var card = new AdaptiveCard("1.0");
+            card.Body.Add(new AdaptiveTextBlock()
+            {
+                Text = FirstName + " " + LastName,
+                Weight = AdaptiveTextWeight.Bolder
+            });
+            card.Body.Add(new AdaptiveTextBlock()
+            {
+                Text = $"Company: {Company}\n\n Email: {Email}"
+            });
+
+            return card;
         }
     }
 
     [XmlRoot("prestashop")]
-    public class CustomerCollection
+    public class CustomerCollection : Carouselable<Customer>
     {
         [XmlArray("customers")]
         [XmlArrayItem("customer", typeof(Customer))]
-        public Customer[] Customers { get; set; }
-
-        public Customer First()
+        public Customer[] Customers 
         {
-            return Customers.Length > 0 ? Customers[0] : null;
+            get { return Elements; }
+            set { Elements = value; }
         }
     }
 }
