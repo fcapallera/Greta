@@ -19,6 +19,7 @@ namespace CoreBot.Dialogs
         protected const int REPRESENTATIVE = 3;
         protected const int LEAD = 4;
         protected const int UNREGISTERED = 5;
+        protected static readonly string[] permissions = { "Superuser", "Vitrosep", "Customer", "Representative", "Lead", "Unregistered"};
 
         protected const string whatElse = "What else can I do for you today?";
         private const string noPermission = "Sorry, you don't have privilege to use this functionality.";
@@ -87,6 +88,20 @@ namespace CoreBot.Dialogs
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(noPermission),cancellationToken);
                 return await stepContext.EndDialogAsync(null, cancellationToken);
+            }
+        }
+
+        protected int ResolvePermission(string permission)
+        {
+            switch (permission)
+            {
+                case "Superuser": return SUPERUSER;
+                case "Vitrosep": return VITROSEP;
+                case "Customer": return CUSTOMERS;
+                case "Representative": return REPRESENTATIVE;
+                case "Lead": return LEAD;
+                case "Unregistered": return UNREGISTERED;
+                default: return -1;
             }
         }
 
