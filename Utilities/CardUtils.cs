@@ -4,14 +4,19 @@ using CoreBot.Store.Entity;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CoreBot.Utilities
 {
+    /// <summary>
+    /// Collection of static methods for custom Card operations.
+    /// </summary>
     public static class CardUtils
     {
         public const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
@@ -34,39 +39,6 @@ namespace CoreBot.Utilities
                 Content = card
             };
             return resposta;
-        }
-
-
-        public static List<Attachment> CarouselFromProducts(ProductCollection collection, IConfiguration configuration)
-        {
-            List<Product> products = collection.Products.ToList();
-            List<Attachment> attachments = new List<Attachment>();
-            var apiKey = configuration.GetSection("PrestashopSettings").GetSection("ApiKey").Value;
-            Guid guid = Guid.NewGuid();
-            int index = 0;
-
-
-            foreach(Product product in products)
-            {
-                var heroCard = new HeroCard
-                {
-                    Title = $"<b>{product.GetNameByLanguage(ENGLISH)}</b>",
-                    Text = product.GetDescriptionByLanguage(ENGLISH),
-                    Images = new List<CardImage> { new CardImage(product.Image.Url+"?ws_key="+apiKey) },
-                    Buttons = new List<CardAction> { new CardAction {
-                        Type = ActionTypes.PostBack,
-                        Title = "Choose", 
-                        Value = $@"{{ ""id"" : ""{guid.ToString()}"", ""action"" : ""{index}""}}"
-                        }
-                    }
-                };
-
-                attachments.Add(heroCard.ToAttachment());
-
-                index++;
-            }
-
-            return attachments;
         }
 
         public static Attachment CreateCardFromOrder(UserProfile userProfile)
@@ -134,6 +106,18 @@ namespace CoreBot.Utilities
                 Content = card,
                 ContentType = "application/vnd.microsoft.card.adaptive"
             };
+        }
+
+        public static T GetValueFromAction<T>(string json) where T : IConvertible
+        {
+            var jobject = JObject.Parse(json);
+            return (T)Convert.ChangeType(jobject["action"], typeof(T), CultureInfo.InvariantCulture);
+        }
+
+        public static string GetGuidFromResult(string card)
+        {
+            var jobject = JObject.Parse(card);
+            return (string)jobject["id"];
         }
 
         static public string AddGuidToJson(string json)
