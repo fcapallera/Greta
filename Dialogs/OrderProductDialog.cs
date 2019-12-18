@@ -9,6 +9,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 
 namespace CoreBot.Dialogs
 {
@@ -67,11 +68,11 @@ namespace CoreBot.Dialogs
 
             var reply = stepContext.Context.Activity.CreateReply();
             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
-            var attachments = CardUtils.CarouselFromProducts(products,Configuration);
-            foreach (Attachment card in attachments) {  reply.Attachments.Add(card); }
+            reply.Attachments = products.ToSelectionCarousel(Configuration);
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(chooseMsg), cancellationToken);
             await stepContext.Context.SendActivityAsync(reply,cancellationToken);
+
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("")});
         }
 
@@ -79,7 +80,9 @@ namespace CoreBot.Dialogs
         {
             var singleOrder = (SingleOrder)stepContext.Options;
 
-            singleOrder.Product = (string)stepContext.Result;
+            var productId = CardUtils.GetValueFromAction<int>((string)stepContext.Result);
+
+            var product = (await PrestashopApi.GetProductById(productId)).First();
 
             var promptOptions = new PromptOptions
             {
@@ -160,7 +163,7 @@ namespace CoreBot.Dialogs
         private Task<bool> ValidateQuantityAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
             bool result = false;
-            if (int.TryParse(promptContext.Context.Activity.Text, out int number))
+            if (int.TryParse(promptContext.Context.Activity.Text, out _))
             {
                 result = true;
             }

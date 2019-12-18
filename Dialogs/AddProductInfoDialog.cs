@@ -42,10 +42,7 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> PromptCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            string[] paths = { ".", "Cards", "productInfoFillingCard.json" };
-            var cardJson = File.ReadAllText(Path.Combine(paths));
-            var processedJson = CardUtils.AddGuidToJson(cardJson);
-            var card = AdaptiveCard.FromJson(processedJson).Card;
+            var card = CardUtils.CreateCardFromJson("productInfoFillingCard");
 
             var activity = new Activity
             {
