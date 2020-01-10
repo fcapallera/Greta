@@ -2,6 +2,7 @@
 using CoreBot.Utilities;
 using Microsoft.Bot.Schema;
 using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
@@ -14,17 +15,23 @@ namespace CoreBot.Store.Entity
         [XmlElement("id_default_image")]
         public override Image Image { get; set; }
 
+        [XmlElement("weight")]
+        public float Weight { get; set; }
+        
+        [XmlElement("price")]
+        public float Price { get; set; }
+
         [XmlArray("name")]
-        [XmlArrayItem("language", typeof(Language))]
-        public Language[] Name { get; set; }
+        [XmlArrayItem("language", typeof(LanguageTraduction))]
+        public List<LanguageTraduction> Name { get; set; }
 
         [XmlArray("description")]
-        [XmlArrayItem("language", typeof(Language))]
-        public Language[] Description { get; set; }
+        [XmlArrayItem("language", typeof(LanguageTraduction))]
+        public List<LanguageTraduction> Description { get; set; }
 
         public string GetNameByLanguage(int language)
         {
-            foreach(Language l in Name)
+            foreach(LanguageTraduction l in Name)
             {
                 if (l.Id == language) return l.Text;
             }
@@ -34,7 +41,7 @@ namespace CoreBot.Store.Entity
 
         public string GetDescriptionByLanguage(int language)
         {
-            foreach (Language l in Description)
+            foreach (LanguageTraduction l in Description)
             {
                 if (l.Id == language) return l.Text;
             }
@@ -56,7 +63,7 @@ namespace CoreBot.Store.Entity
         }
     }
 
-    public class Language
+    public class LanguageTraduction
     {
         [XmlAttribute("id")]
         public int Id { get; set; }

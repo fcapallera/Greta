@@ -12,10 +12,10 @@ namespace CoreBot.Store.Entity
     /// <summary>
     /// Represents an object that can be rendered as an Adaptive attachment.
     /// </summary>
-    public abstract class IAttachable
+    public abstract class IAttachable : IIdentifiable
     {
         [XmlIgnore]
-        public abstract int Id { get; set; }
+        public override abstract int Id { get; set; }
         public Attachment ToAttachment()
         {
             return CardUtils.AdaptiveCardToAttachment(ToAdaptiveCard());
