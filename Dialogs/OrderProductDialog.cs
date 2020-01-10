@@ -126,6 +126,8 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> AddToCartStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            //TO_DO Add Order to Prestashop
+
             var singleOrder = (SingleOrder)stepContext.Options;
 
             if ((bool)stepContext.Result)

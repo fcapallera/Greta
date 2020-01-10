@@ -9,6 +9,9 @@ namespace CoreBot.Store.Entity
         [XmlElement("id")]
         public override int Id { get; set; }
 
+        [XmlElement("id_lang")]
+        public CustomerLanguage Language { get; set; }
+
         [XmlElement("passwd")]
         public string Password { get; set; }
 
@@ -49,6 +52,15 @@ namespace CoreBot.Store.Entity
 
             return card;
         }
+    }
+
+    public class CustomerLanguage
+    {
+        [XmlText]
+        public int Id { get; set; }
+
+        [XmlAttribute("href", Namespace = "http://www.w3.org/1999/xlink")]
+        public string Url { get; set; }
     }
 
     [XmlRoot("prestashop")]
