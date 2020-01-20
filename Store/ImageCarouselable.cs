@@ -16,17 +16,16 @@ namespace CoreBot.Store
     {
         public Attachment[] ToSelectionCarousel(IConfiguration configuration)
         {
-            int i = 0;
             List<Attachment> attachments = new List<Attachment>();
             Guid guid = Guid.NewGuid();
 
-            while (i < Elements.Length)
+            foreach(T element in Elements)
             {
-                var card = Elements[i].ToImageAdaptiveCard(configuration);
+                var card = element.ToImageAdaptiveCard(configuration);
                 card.Actions.Add(new AdaptiveSubmitAction
                 {
                     Title = "SELECT",
-                    DataJson = $@"{{ ""id"" : ""{guid.ToString()}"", ""action"" : ""{Elements[i].Id}""}}"
+                    DataJson = $@"{{ ""id"" : ""{guid.ToString()}"", ""action"" : ""{element.Id}""}}"
                 });
 
                 var attachment = new Attachment
@@ -36,7 +35,6 @@ namespace CoreBot.Store
                 };
 
                 attachments.Add(attachment);
-                i++;
             }
 
             return attachments.ToArray();

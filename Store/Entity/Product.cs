@@ -92,7 +92,7 @@ namespace CoreBot.Store.Entity
     {
         [XmlArray("products")]
         [XmlArrayItem("product", typeof(Product))]
-        public Product[] Products 
+        public List<Product> Products 
         {
             get { return Elements; }
             set { Elements = value; }

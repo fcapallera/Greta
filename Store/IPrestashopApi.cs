@@ -20,5 +20,8 @@ namespace CoreBot.Store
 
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[firstname]=%[{firstname}]%")]
         Task<CustomerCollection> GetCustomerByFirstName(string firstname);
+
+        [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[email]=%[{email}]%")]
+        Task<CustomerCollection> GetCustomerByEmail(string email);
     }
 }
