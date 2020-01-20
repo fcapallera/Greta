@@ -85,7 +85,7 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> DispatchStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var intent = stepContext.Values["Intent"];
+            var intent = stepContext.GetValue<string>("Intent");
             var recognizer = stepContext.Result as RecognizerResult ?? null;
 
             switch (intent)

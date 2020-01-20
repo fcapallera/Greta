@@ -63,6 +63,8 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddSingleton<UserValidationDialog>();
 
+            services.AddSingleton<UserLoginDialog>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
