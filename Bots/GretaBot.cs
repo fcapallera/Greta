@@ -15,6 +15,9 @@ namespace CoreBot.Bots
         private readonly Dialog Dialog;
         private readonly BotState _conversationState;
         private readonly BotState _userState;
+        private const string askingMsg = "If you want me to perform an action for you just ask it straight forward. You can say things like:\n- I want to log in.\n- I want to order vitrocool.\n- Show me my shopping card.\n- What products can I buy?";
+        private const string cancelMsg = "Once we start a conversation (let's say you want to order something and I start asking things) and you want to cancel, you can say something like *cancel* or *quit* to exit the current operation.";
+        private const string helpMsg = "Also, if you don't know what's happening just type *?* or *help* and I will try to explain what is going on!";
 
         public GretaBot(ConversationState conversationState, UserState userState, T dialog)
         {
@@ -35,7 +38,10 @@ namespace CoreBot.Bots
 
                 var jobject = (JObject)activity.Value;
 
-                if (conversationData.DisabledCards.ContainsKey((string)jobject["id"]))
+                if (jobject["id"].ToString().StartsWith("Greta"))
+                    await SendGretaHelpMessageAsync(turnContext);
+
+                else if (conversationData.DisabledCards.ContainsKey((string)jobject["id"]))
                 {
                     await turnContext.SendActivityAsync(MessageFactory.Text(CardUtils.sameCardMsg), cancellationToken);
                 }
@@ -53,6 +59,26 @@ namespace CoreBot.Bots
             // Save any changes on the User/Conversation State.
             await _userState.SaveChangesAsync(turnContext);
             await _conversationState.SaveChangesAsync(turnContext);
+        }
+
+
+        public static async Task SendGretaHelpMessageAsync(ITurnContext turnContext)
+        {
+            var json = (JObject)turnContext.Activity.Value;
+            var code = (string)json["id"];
+
+            switch (code)
+            {
+                case "GretaMoreInfo":
+                    await turnContext.SendActivityAsync(askingMsg);
+                    await turnContext.SendActivityAsync(cancelMsg);
+                    await turnContext.SendActivityAsync(helpMsg);
+                    break;
+
+                case "GretaActions":
+                    await turnContext.SendActivityAsync("TO_DO");
+                    break;
+            }
         }
     }
 }
