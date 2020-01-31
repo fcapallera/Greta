@@ -1,17 +1,17 @@
-﻿using CoreBot.Extensions;
+﻿using CoreBot.Controllers;
+using CoreBot.Extensions;
 using CoreBot.Models;
 using CoreBot.Store;
+using CoreBot.Store.Entity;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -21,13 +21,19 @@ namespace CoreBot.Dialogs
 {
     public class UserLoginDialog : CardDialog
     {
+        private const string validationMsg = "I've asked our Staff members to validate your account. You will receive a notification when it's done!";
+
         private readonly IPrestashopApi PrestashopApi;
         private readonly IConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
+        private readonly NotifyController NotifyController;
+        private readonly UserController UserController;
+        private const string CUSTOMER = "Customer";
         private string UserEmail;
 
         public UserLoginDialog(UserState userState, ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration,
-            IServiceProvider serviceProvider) : base(nameof(UserLoginDialog), userState, conversationState)
+            IServiceProvider serviceProvider, NotifyController notifyController, UserController userController)
+            : base(nameof(UserLoginDialog), userState, conversationState)
         {
             AddDialog(new TextPrompt("EmailValidator", ValidateEmailAsync));
             AddDialog(new TextPrompt("PasswordValidator", ValidatePasswordAsync));
@@ -40,13 +46,14 @@ namespace CoreBot.Dialogs
                 ConfirmPasswordStepAsync,
                 DisableCardStepAsync,
                 CheckUserProfileStepAsync,
-                AskForVerificationStepAsync,
-                FinalStepAsync
+                AskForVerificationStepAsync
             }));
 
             PrestashopApi = prestashopApi;
             Configuration = configuration;
             ServiceProvider = serviceProvider;
+            NotifyController = notifyController;
+            UserController = userController;
             PermissionLevel = UNREGISTERED;
             InitialDialogId = nameof(WaterfallDialog);
         }
@@ -66,6 +73,7 @@ namespace CoreBot.Dialogs
         {
             UserEmail = (string)stepContext.Result;
             var customer = (await PrestashopApi.GetCustomerByEmail(UserEmail)).First();
+            stepContext.Values[CUSTOMER] = customer;
             var card = CardUtils.CreateCardFromJson("submitPassword");
 
             var activity = new Activity
@@ -86,7 +94,7 @@ namespace CoreBot.Dialogs
                 RetryPrompt = activity
             };
 
-            await stepContext.Context.SendActivityAsync($"Hi, in order to verify you're {customer.FirstName + " " + customer.LastName}, please enter your password",
+            await stepContext.Context.SendActivityAsync($"Hi, in order to verify you're {customer.GetFullName()}, please enter your password",
                 null,InputHints.IgnoringInput, cancellationToken);
 
             return await stepContext.PromptAsync("PasswordValidator", promptOptions, cancellationToken);
@@ -94,60 +102,70 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> CheckUserProfileStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            // The user passed the email validation so we can assume the user exists. 
-            var customer = (await PrestashopApi.GetCustomerByEmail(UserEmail)).First();
+            var customer = stepContext.GetValue<Customer>(CUSTOMER);
 
-            if (await CheckForUserProfileAsync(customer.Id))
+            //UserProfile already exists, check if it's validated.
+            if (await UserController.CheckForUserProfileAsync(customer.Id))
             {
-                stepContext.Values["verificationStep"] = false;
-                return await stepContext.NextAsync(null, cancellationToken);
+                if(await CheckForValidationAsync(customer.Id))
+                {
+                    using (var context = ServiceProvider.CreateScope())
+                    {
+                        var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
+
+                        var user = await UserController.GetUserByPrestashopIdAsync(customer.Id);
+                        user.BotUserId = stepContext.Context.Activity.From.Id;
+                        await db.SaveChangesAsync();
+                    }
+
+                    await stepContext.Context.SendActivityAsync("Login Successful");
+
+                    return await stepContext.EndDialogAsync(true, cancellationToken);
+                }
             }
+            //User profile doesn't exist, create one and ask for validation.
             else
             {
-                stepContext.Values["verificationStep"] = true;
-
-                var promptOptions = new PromptOptions
+                var profile = new Models.UserProfile
                 {
-                    Prompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation?"),
-                    RetryPrompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation? (Yes/No)")
+                    PrestashopId = customer.Id,
+                    BotUserId = stepContext.Context.Activity.From.Id,
+                    Validated = false
                 };
 
-                return await stepContext.PromptAsync(nameof(ConfirmPrompt), promptOptions, cancellationToken);
+                await UserController.AddUserAsync(profile);
             }
+
+            var promptOptions = new PromptOptions
+            {
+                Prompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation?"),
+                RetryPrompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation? (Yes/No)")
+            };
+
+            return await stepContext.PromptAsync(nameof(ConfirmPrompt), promptOptions, cancellationToken);
         }
+
 
         private async Task<DialogTurnResult> AskForVerificationStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var verification = stepContext.GetValue<bool>("verificationStep");
+            // Get the result of the user's choice
+            var result = (bool)stepContext.Result;
 
-            if (verification)
+            if (result)
             {
-                // Get the result of the user's choice
-                var result = (bool)stepContext.Result;
+                var userId = stepContext.Context.Activity.From.Id;
+                await NotifyController.RequestValidationAsync(userId);
 
-                if (result)
-                {
-                    await stepContext.Context.SendActivityAsync("TO_DO Send notification for user Validation");
-                    return await stepContext.EndDialogAsync(true, cancellationToken);
-                }
-                else
-                {
-                    return await stepContext.EndDialogAsync(false, cancellationToken);
-                }
+                await stepContext.Context.SendActivityAsync(validationMsg);
+
+                return await stepContext.EndDialogAsync(null, cancellationToken);
             }
             else
             {
-                return await stepContext.NextAsync(null, cancellationToken);
+                return await stepContext.EndDialogAsync(false, cancellationToken);
             }
         }
 
-
-        private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            await stepContext.Context.SendActivityAsync("Login Successful");
-
-            return await stepContext.EndDialogAsync(true, cancellationToken);
-        }
 
         private async Task<bool> ValidateEmailAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
@@ -155,13 +173,7 @@ namespace CoreBot.Dialogs
 
             var userCollection = await PrestashopApi.GetCustomerByEmail(email);
 
-            if(userCollection.Elements.Count == 0)
-            {
-                //await promptContext.Context.SendActivityAsync(MessageFactory.Text("This email does not exist"));
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
+            return await Task.FromResult(userCollection.Elements.Count != 0);
         }
 
         private async Task<bool> ValidatePasswordAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
@@ -188,18 +200,11 @@ namespace CoreBot.Dialogs
             }
         }
 
-        private async Task<bool> CheckForUserProfileAsync(int userId)
+        
+        private async Task<bool> CheckForValidationAsync(int prestaId)
         {
-            using (var scope = ServiceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<GretaDBContext>();
-
-                var sources = await db.UserProfile
-                    .Where(x => x.Id == userId)
-                    .SingleOrDefaultAsync();
-
-                return await Task.FromResult(sources != null);
-            }
+            var user = await UserController.GetUserByPrestashopIdAsync(prestaId);
+            return await Task.FromResult(user.Validated);
         }
     }
 }

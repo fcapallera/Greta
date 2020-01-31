@@ -1,10 +1,12 @@
-﻿using CoreBot.Extensions;
+﻿using CoreBot.Controllers;
+using CoreBot.Extensions;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,14 +15,14 @@ namespace CoreBot.Dialogs
     public class AskUserInfoDialog : ComponentDialog
     {
         private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
-        private const string askNameMsg = "My name is Greta, who are you?";
         private const string askCompanyMsg = "What company do you work for?";
         private const string finishMsg = "Thank you, what can I do for you today?";
         private const string registeredMsg = "Are you registered in our web store? (You need to be registered in order to get the most out of me!)";
         private const string waitForValidationMsg = "Thanks for registering.\nA VITROSEP administrator will validate your user soon, we will send you a notification asap!";
         private const string unregisteredName = "As a non registered user, you must have a name!\nWhat do you want me to call you?";
 
-        public AskUserInfoDialog(UserState userState, UserLoginDialog userLoginDialog) : base(nameof(AskUserInfoDialog))
+        public AskUserInfoDialog(UserState userState, UserLoginDialog userLoginDialog)
+            : base(nameof(AskUserInfoDialog))
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
@@ -43,7 +45,7 @@ namespace CoreBot.Dialogs
         {
             var card = CardUtils.CreateCardFromJson("gretaWelcomeCard");
 
-            var activity = new Activity
+            var activity = new Microsoft.Bot.Schema.Activity
             {
                 Attachments = new List<Attachment>() {
                     new Attachment()
@@ -71,9 +73,8 @@ namespace CoreBot.Dialogs
 
             if (result)
             {
-                await stepContext.Context.SendActivityAsync("Use your VitrosepStore credentials to log in");
-                await stepContext.BeginDialogAsync(nameof(UserLoginDialog), null, cancellationToken);
-                return await stepContext.EndDialogAsync(null, cancellationToken);
+                await stepContext.Context.SendActivityAsync("Use your VitrosepStore credentials to log in",null,InputHints.IgnoringInput,cancellationToken);
+                return await stepContext.ReplaceDialogAsync(nameof(UserLoginDialog), null, default);
             }
             else
             { 
@@ -92,7 +93,12 @@ namespace CoreBot.Dialogs
             var result = (bool)stepContext.Result;
             if (result)
             {
-                System.Diagnostics.Process.Start("https://vitrosepstore.com/en/login?create_account=1");
+                var ps = new ProcessStartInfo("https://vitrosepstore.com/en/login?create_account=1")
+                {
+                    UseShellExecute = true,
+                    Verb = "open"
+                };
+                Process.Start(ps);
 
                 await stepContext.Context.SendActivityAsync(waitForValidationMsg);
                 return await stepContext.EndDialogAsync(null, cancellationToken);
@@ -122,6 +128,7 @@ namespace CoreBot.Dialogs
 
             return await stepContext.PromptAsync(nameof(ConfirmPrompt), new PromptOptions { Prompt = message }, cancellationToken);
         }
+
 
         private async Task<DialogTurnResult> AskCompanyStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
