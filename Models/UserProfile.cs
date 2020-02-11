@@ -19,8 +19,9 @@ namespace CoreBot.Models
         }
 
         public int Id { get; set; }
+        public string BotUserId { get; set; }
         public int? PrestashopId { get; set; }
-        public bool Welcomed { get; set; }
+        public bool Validated { get; set; }
         public int Permission { get; set; }
         public DateTime CreationDate { get; set; }
 

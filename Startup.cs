@@ -17,6 +17,9 @@ using System;
 using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using CoreBot.Models;
+using System.Collections.Concurrent;
+using Microsoft.Bot.Schema;
+using CoreBot.Controllers;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -63,11 +66,23 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddSingleton<UserValidationDialog>();
 
+            services.AddSingleton<UserLoginDialog>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
+            services.AddSingleton<NotifyController>();
+
+            services.AddSingleton<UserController>();
+
+            services.AddSingleton<QuestionController>();
+
+            services.AddSingleton<PermissionDialog>();
+
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, GretaBot<MainDialog>>();
+
+            services.AddSingleton<ConcurrentDictionary<string, ConversationReference>>();
 
             var apiKey = Configuration.GetSection("PrestashopSettings").GetSection("ApiKey").Value;
             var storeUrl = Configuration.GetSection("PrestashopSettings").GetSection("StoreUrl").Value;
@@ -80,8 +95,8 @@ namespace Microsoft.BotBuilderSamples
                 {
                     ContentSerializer = new XmlContentSerializer()
                 })
-                .ConfigureHttpClient((c) => c.BaseAddress = new Uri(storeUrl))
-                .ConfigureHttpClient((c) => c.DefaultRequestHeaders.Add("Authorization", "Basic " + encoded));
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(storeUrl))
+                .ConfigureHttpClient(c => c.DefaultRequestHeaders.Add("Authorization", "Basic " + encoded));
 
             services.AddDbContext<GretaDBContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

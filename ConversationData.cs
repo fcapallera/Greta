@@ -14,5 +14,7 @@ namespace CoreBot
         public NodeDecisio RootNode { get; set; }
 
         public Dictionary<string, DateTime> DisabledCards { get; } = new Dictionary<string,DateTime>();
+
+        public bool Welcomed { get; set; } = false;
     }
 }

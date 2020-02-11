@@ -1,10 +1,11 @@
 ﻿using AdaptiveCards;
 using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    public class Customer : IAttachable
+    public class Customer : IAttachable, IEquatable<Customer>
     {
         [XmlElement("id")]
         public override int Id { get; set; }
@@ -37,6 +38,11 @@ namespace CoreBot.Store.Entity
             set { UpdateDate = DateTime.Parse(value); }
         }
 
+        public bool Equals(Customer other)
+        {
+            return Id == other.Id;
+        }
+
         public override AdaptiveCard ToAdaptiveCard()
         {
             var card = new AdaptiveCard("1.0");
@@ -51,6 +57,11 @@ namespace CoreBot.Store.Entity
             });
 
             return card;
+        }
+
+        public string GetFullName()
+        {
+            return FirstName + " " + LastName;
         }
     }
 
@@ -68,7 +79,7 @@ namespace CoreBot.Store.Entity
     {
         [XmlArray("customers")]
         [XmlArrayItem("customer", typeof(Customer))]
-        public Customer[] Customers 
+        public List<Customer> Customers 
         {
             get { return Elements; }
             set { Elements = value; }

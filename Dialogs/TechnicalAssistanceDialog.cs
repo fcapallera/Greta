@@ -1,4 +1,5 @@
-﻿using CoreBot.Extensions;
+﻿using CoreBot.Controllers;
+using CoreBot.Extensions;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
@@ -15,32 +16,34 @@ namespace CoreBot.Dialogs
         private const string _insightMessage = "If your problem still persists, would you like to give us a description about your problem? If we already solved your problem chose \"No\"";
         private const string _promptMessage = "Please, tell us more about your problem.";
 
-        private IStatePropertyAccessor<ConversationData> _conversationDataAccessor;
+        private readonly IStatePropertyAccessor<ConversationData> _conversationDataAccessor;
+        private readonly QuestionController QuestionController;
 
-        public TechnicalAssistanceDialog(ConversationState conversationState, UserState userState)
-            : base(nameof(TechnicalAssistanceDialog),userState)
+        public TechnicalAssistanceDialog(ConversationState conversationState, UserController userController,
+            QuestionController questionController)
+            : base(nameof(TechnicalAssistanceDialog),userController)
         {
-            //_conversationDataAccessor = conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
-
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
-                {
-                    PromptOptionsAsync,
-                    OptionalStepAsync,
-                    FinalStepAsync,
-                }));
+            {
+                CheckPermissionStepAsync,
+                PromptOptionsAsync,
+                OptionalStepAsync,
+                FinalStepAsync,
+            }));
 
             InitialDialogId = nameof(WaterfallDialog);
-            PermissionLevel = CUSTOMERS;
+            PermissionLevel = PermissionLevels.Customer;
+            QuestionController = questionController;
             _conversationDataAccessor = conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
         }
 
         private async Task<DialogTurnResult> PromptOptionsAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            //var conversationData = await _conversationDataAccessor.GetAsync(stepContext.Context, () => new ConversationData());
+            var conversationData = await _conversationDataAccessor.GetAsync(stepContext.Context, () => new ConversationData());
 
             var nodeActual = (NodeDecisio)stepContext.Options;
             stepContext.Values["Node"] = nodeActual;
@@ -86,13 +89,13 @@ namespace CoreBot.Dialogs
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var choice = (FoundChoice)stepContext.Result;
-            var nodeActual = (NodeDecisio)stepContext.Values["Node"];
+            var nodeActual = stepContext.GetValue<NodeDecisio>("Node");
 
             if(nodeActual.fills.Count == 0)
             {
                 var question = (string)stepContext.Result;
 
-                //TO_DO ENVIAR PREGUNTA A LA BASE DE DADES
+                await QuestionController.AddQuestionAsync(question, stepContext.Context.Activity.From.Id);
 
                 return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             }
@@ -100,8 +103,6 @@ namespace CoreBot.Dialogs
             {
                 return await stepContext.ReplaceDialogAsync(nameof(TechnicalAssistanceDialog), nodeActual.ObtenirNode(choice.Value), cancellationToken);
             }
-            
         }
-
     }
 }

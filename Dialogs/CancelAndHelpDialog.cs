@@ -1,35 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using CoreBot.Controllers;
 using CoreBot.Permission;
+using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 
 namespace CoreBot.Dialogs
 {
-    public class CancelAndHelpDialog : ComponentDialog, IPermissionObject
+    public class CancelAndHelpDialog : PermissionDialog
     {
-        // Permission levels
-        protected const int SUPERUSER = 0;
-        protected const int VITROSEP = 1;
-        protected const int CUSTOMERS = 2;
-        protected const int REPRESENTATIVE = 3;
-        protected const int LEAD = 4;
-        protected const int UNREGISTERED = 5;
-        protected static readonly string[] permissions = { "Superuser", "Vitrosep", "Customer", "Representative", "Lead", "Unregistered"};
-
         protected const string whatElse = "What else can I do for you today?";
-        private const string noPermission = "Sorry, you don't have privilege to use this functionality.";
-        protected readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
-        public int PermissionLevel { get; set; } = 5;
+        protected const string WATERFALL = "WaterfallDialog";
 
-        public CancelAndHelpDialog(string id, UserState userState)
-            : base(id)
+        public CancelAndHelpDialog(string id, UserController userController)
+            : base(userController,id)
         {
-            _profileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
         }
 
         protected override async Task<DialogTurnResult> OnBeginDialogAsync(DialogContext innerDc, object options, CancellationToken cancellationToken = default(CancellationToken))
@@ -64,7 +56,7 @@ namespace CoreBot.Dialogs
                 {
                     case "help":
                     case "?":
-                        await innerDc.Context.SendActivityAsync($"Show Help...", cancellationToken: cancellationToken);
+                        await ShowHelpAsync(innerDc);
                         return new DialogTurnResult(DialogTurnStatus.Waiting);
 
                     case "cancel":
@@ -77,37 +69,24 @@ namespace CoreBot.Dialogs
             return null;
         }
 
-        protected async Task<DialogTurnResult> CheckPermissionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
-            if (HasPermission(userProfile.Permission))
-            {
-                return await stepContext.NextAsync(stepContext.Options, cancellationToken);
-            }
-            else
-            {
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text(noPermission),cancellationToken);
-                return await stepContext.EndDialogAsync(null, cancellationToken);
-            }
-        }
 
-        protected int ResolvePermission(string permission)
+        protected virtual async Task ShowHelpAsync(DialogContext innerDc)
         {
-            switch (permission)
-            {
-                case "Superuser": return SUPERUSER;
-                case "Vitrosep": return VITROSEP;
-                case "Customer": return CUSTOMERS;
-                case "Representative": return REPRESENTATIVE;
-                case "Lead": return LEAD;
-                case "Unregistered": return UNREGISTERED;
-                default: return -1;
-            }
-        }
+            var card = CardUtils.CreateCardFromJson("gretaWelcomeCard");
 
-        public bool HasPermission(int permission)
-        {
-            return PermissionLevel >= permission;
+            var activity = new Activity
+            {
+                Attachments = new List<Attachment>() {
+                    new Attachment()
+                    {
+                        Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(card)),
+                        ContentType = "application/vnd.microsoft.card.adaptive"
+                    }
+                },
+                Type = ActivityTypes.Message
+            };
+
+            await innerDc.Context.SendActivityAsync(activity);
         }
     }
 }

@@ -12,6 +12,9 @@ namespace CoreBot.Store
         [Get("/products?display=[id,name,description,id_default_image]&filter[id]={id}%")]
         Task<ProductCollection> GetProductById(int id);
 
+        [Get("/products?display=full")]
+        Task<ProductCollection> GetAllProducts();
+
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[id]={id}")]
         Task<CustomerCollection> GetCustomerById(int id);
 
@@ -20,5 +23,8 @@ namespace CoreBot.Store
 
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[firstname]=%[{firstname}]%")]
         Task<CustomerCollection> GetCustomerByFirstName(string firstname);
+
+        [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[email]=%[{email}]%")]
+        Task<CustomerCollection> GetCustomerByEmail(string email);
     }
 }

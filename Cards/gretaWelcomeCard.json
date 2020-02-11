@@ -1,0 +1,45 @@
+{
+  "type": "AdaptiveCard",
+  "body": [
+    {
+      "type": "Image",
+      "url": "https://i.imgur.com/5EVSOq0.jpg",
+      "size": "stretch"
+    },
+    {
+      "type": "TextBlock",
+      "weight": "bolder",
+      "size": "default",
+      "text": "Hi, I'm Greta! The VITROSEP virtual assistant"
+    },
+    {
+      "type": "TextBlock",
+      "isSubtle": "true",
+      "wrap": "true",
+      "text": "I've been designed to provide a complete and user-friendly experience of our services. I can give you information about our products and even order them for you! If you want more information use the buttons below or start chatting!"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "How to ask me things",
+      "data": {
+        "id": "GretaMoreInfo"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "What can I do?",
+      "data": {
+        "id": "GretaActions"
+      }
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "Register in VitrosepStore",
+      "url": "https://vitrosepstore.com/en/login?create_account=1"
+    }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.0"
+}

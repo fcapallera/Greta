@@ -24,7 +24,7 @@ namespace CoreBot.Models
         {
             modelBuilder.Entity<Naquestions>(entity =>
             {
-                entity.HasKey(e => e.QuestionId);
+                entity.HasKey(e => e.Id);
 
                 entity.ToTable("NAQuestions");
 
@@ -38,6 +38,8 @@ namespace CoreBot.Models
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_NAQuestions_UserProfile");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<OrderLine>(entity =>

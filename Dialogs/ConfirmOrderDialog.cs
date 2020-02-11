@@ -1,4 +1,5 @@
-﻿using CoreBot.Utilities;
+﻿using CoreBot.Controllers;
+using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
@@ -14,10 +15,10 @@ namespace CoreBot.Dialogs
         private const string noOrderMsg = "Sorry, you need to order something first.";
         private const string ignoreOrder = "Your order is still pending, you can confirm, cancel or add more products!";
 
-        public ConfirmOrderDialog(UserState userState, ConversationState conversationState) 
-            : base(nameof(ConfirmOrderDialog),userState, conversationState)
+        public ConfirmOrderDialog(UserController userController, ConversationState conversationState) 
+            : base(nameof(ConfirmOrderDialog),userController, conversationState)
         {
-            AddDialog(new TextPrompt(nameof(TextPrompt)));
+            /*AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -27,13 +28,13 @@ namespace CoreBot.Dialogs
                 DisableCardStepAsync,
                 ProcessValueStepAsync,
                 FinalStepAsync
-            }));
+            }));*/
 
-            PermissionLevel = REPRESENTATIVE;
+            PermissionLevel = PermissionLevels.Representative;
             InitialDialogId = nameof(WaterfallDialog);
         }
 
-        private async Task<DialogTurnResult> CheckOrderStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        /*private async Task<DialogTurnResult> CheckOrderStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
 
@@ -107,6 +108,6 @@ namespace CoreBot.Dialogs
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(whatElse), cancellationToken);
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
-        }
+        }*/
     }
 }
