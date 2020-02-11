@@ -34,7 +34,7 @@ namespace CoreBot.Store.Entity
             foreach(LanguageTraduction l in Name)
             {
                 if (l.Id == language) return l.Text;
-            }
+            }   
 
             return "";
         }
@@ -52,12 +52,17 @@ namespace CoreBot.Store.Entity
         public override AdaptiveCard ToAdaptiveCard()
         {
             var card = new AdaptiveCard("1.0");
-            card.Body.Add(new AdaptiveTextBlock()
+            card.Body.Add(new AdaptiveTextBlock
             {
                 Text = GetNameByLanguage(CardUtils.ENGLISH),
-                Weight = AdaptiveTextWeight.Bolder
+                Weight = AdaptiveTextWeight.Bolder,
+                Size = AdaptiveTextSize.Large,
+                Wrap = true
             });
-            card.Body.Add(new AdaptiveTextBlock(GetDescriptionByLanguage(CardUtils.ENGLISH)));
+            card.Body.Add(new AdaptiveTextBlock(GetDescriptionByLanguage(CardUtils.ENGLISH))
+            {
+                Wrap = true
+            });
 
             return card;
         }

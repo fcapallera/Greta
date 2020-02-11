@@ -39,5 +39,27 @@ namespace CoreBot.Store
 
             return attachments.ToArray();
         }
+
+
+        public Attachment[] ToCarousel(IConfiguration configuration)
+        {
+            List<Attachment> attachments = new List<Attachment>();
+            Guid guid = Guid.NewGuid();
+
+            foreach (T element in Elements)
+            {
+                var card = element.ToImageAdaptiveCard(configuration);
+
+                var attachment = new Attachment
+                {
+                    Content = card,
+                    ContentType = "application/vnd.microsoft.card.adaptive"
+                };
+
+                attachments.Add(attachment);
+            }
+
+            return attachments.ToArray();
+        }
     }
 }

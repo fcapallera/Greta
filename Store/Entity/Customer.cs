@@ -58,6 +58,11 @@ namespace CoreBot.Store.Entity
 
             return card;
         }
+
+        public string GetFullName()
+        {
+            return FirstName + " " + LastName;
+        }
     }
 
     public class CustomerLanguage
