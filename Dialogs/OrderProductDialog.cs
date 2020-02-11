@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using CoreBot.Controllers;
 using CoreBot.Store;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
@@ -22,8 +23,8 @@ namespace CoreBot.Dialogs
         private readonly IPrestashopApi PrestashopApi;
         private readonly IConfiguration Configuration;
 
-        public OrderProductDialog(UserState userState, ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration) 
-            : base(nameof(OrderProductDialog),userState,conversationState)
+        public OrderProductDialog(UserController userController, ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration) 
+            : base(nameof(OrderProductDialog),userController,conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new TextPrompt("TextValidator", ValidateQuantityAsync));
@@ -41,7 +42,7 @@ namespace CoreBot.Dialogs
                }));
 
             InitialDialogId = nameof(WaterfallDialog);
-            PermissionLevel = UNREGISTERED;
+            PermissionLevel = PermissionLevels.Representative;
             PrestashopApi = prestashopApi;
             Configuration = configuration;
         }
@@ -126,9 +127,9 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> AddToCartStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            //TO_DO Add Order to Prestashop
+            //TODO Add Order to Prestashop (esperar GSP)
 
-            var singleOrder = (SingleOrder)stepContext.Options;
+            /*var singleOrder = (SingleOrder)stepContext.Options;
 
             if ((bool)stepContext.Result)
             {
@@ -148,7 +149,7 @@ namespace CoreBot.Dialogs
             else
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(notAddedMsg), cancellationToken);
-            }
+            }*/
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(whatElse), cancellationToken);
 
@@ -159,7 +160,7 @@ namespace CoreBot.Dialogs
         {
             var product = promptContext.Context.Activity.Text;
             var collection = await PrestashopApi.GetProductByName(product);
-            return await Task.FromResult(collection.Products.Length == 0);
+            return await Task.FromResult(collection.Products.Count == 0);
         }
 
         private Task<bool> ValidateQuantityAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)

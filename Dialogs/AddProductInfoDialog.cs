@@ -1,4 +1,5 @@
 ﻿using AdaptiveCards;
+using CoreBot.Controllers;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -19,8 +20,8 @@ namespace CoreBot.Dialogs
         private const string Preview = "Do you want to preview the Product you just added?";
         private readonly IConfiguration Configuration;
 
-        public AddProductInfoDialog(UserState userState, ConversationState conversationState, IConfiguration configuration) 
-            : base(nameof(AddProductInfoDialog), userState, conversationState)
+        public AddProductInfoDialog(UserController userController, ConversationState conversationState, IConfiguration configuration) 
+            : base(nameof(AddProductInfoDialog), userController, conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt), ValidateCardInputAsync));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
@@ -36,7 +37,7 @@ namespace CoreBot.Dialogs
             InitialDialogId = nameof(WaterfallDialog);
 
             // VITROSEP and Superusers only
-            PermissionLevel = VITROSEP;
+            PermissionLevel = PermissionLevels.Vitrosep;
             Configuration = configuration;
         }
 

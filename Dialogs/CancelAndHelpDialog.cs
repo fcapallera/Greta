@@ -17,6 +17,7 @@ namespace CoreBot.Dialogs
     public class CancelAndHelpDialog : PermissionDialog
     {
         protected const string whatElse = "What else can I do for you today?";
+        protected const string WATERFALL = "WaterfallDialog";
 
         public CancelAndHelpDialog(string id, UserController userController)
             : base(userController,id)
@@ -55,8 +56,7 @@ namespace CoreBot.Dialogs
                 {
                     case "help":
                     case "?":
-                        var dialog = innerDc.Stack[innerDc.Stack.Count - 1];
-                        await innerDc.Context.SendActivityAsync($"{dialog.State["stepIndex"]}", cancellationToken: cancellationToken);
+                        await ShowHelpAsync(innerDc);
                         return new DialogTurnResult(DialogTurnStatus.Waiting);
 
                     case "cancel":
@@ -74,7 +74,7 @@ namespace CoreBot.Dialogs
         {
             var card = CardUtils.CreateCardFromJson("gretaWelcomeCard");
 
-            var activity = new Microsoft.Bot.Schema.Activity
+            var activity = new Activity
             {
                 Attachments = new List<Attachment>() {
                     new Attachment()

@@ -19,7 +19,6 @@ namespace CoreBot.Dialogs
         private const string finishMsg = "Thank you, what can I do for you today?";
         private const string registeredMsg = "Are you registered in our web store? (You need to be registered in order to get the most out of me!)";
         private const string waitForValidationMsg = "Thanks for registering.\nA VITROSEP administrator will validate your user soon, we will send you a notification asap!";
-        private const string unregisteredName = "As a non registered user, you must have a name!\nWhat do you want me to call you?";
 
         public AskUserInfoDialog(UserState userState, UserLoginDialog userLoginDialog)
             : base(nameof(AskUserInfoDialog))
@@ -31,8 +30,6 @@ namespace CoreBot.Dialogs
                 WelcomeStepAsync,
                 AskForRegistrationStepAsync,
                 RegisterOptionalStepAsync,
-                AskIfCompanyStepAsync,
-                AskCompanyStepAsync,
                 FinalStepAsync,
             }));
             AddDialog(userLoginDialog);
@@ -101,42 +98,13 @@ namespace CoreBot.Dialogs
                 Process.Start(ps);
 
                 await stepContext.Context.SendActivityAsync(waitForValidationMsg);
-                return await stepContext.EndDialogAsync(null, cancellationToken);
             }
             else
             {
-                var promptOptions = new PromptOptions
-                {
-                    Prompt = MessageFactory.Text(unregisteredName)
-                };
-
-                return await stepContext.PromptAsync(nameof(TextPrompt), promptOptions, cancellationToken);
-            }
-        }
-
-        private async Task<DialogTurnResult> AskIfCompanyStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var name = (string)stepContext.Result;
-
-            var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
-
-            userProfile.Name = name;
-
-            stepContext.Values["profile"] = userProfile;
-
-            var message = MessageFactory.Text($"Nice to meet you {name}, do you work for a company we might of?");
-
-            return await stepContext.PromptAsync(nameof(ConfirmPrompt), new PromptOptions { Prompt = message }, cancellationToken);
-        }
-
-
-        private async Task<DialogTurnResult> AskCompanyStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userProfile = (UserProfile)stepContext.Values["profile"];
-
-            if ((bool)stepContext.Result)
-            {
-                return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text(askCompanyMsg) }, cancellationToken);
+                await stepContext.Context.SendActivityAsync("You can register whenever you want (just tell me " +
+                    "*I want to register*).\n Now you're currently interacting with me as a non-registered user, " +
+                    "what that means is that your actions are limited! In order to enjoy all of our services you must " +
+                    "register on our VitrosepStore and then Log in :)");
             }
 
             return await stepContext.NextAsync(null, cancellationToken);
@@ -145,14 +113,10 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var company = (string)stepContext.Result;
-            var userProfile = (UserProfile)stepContext.Values["profile"];
+            
 
-            userProfile.AskedForUserInfo = true;
-            userProfile.Company = company;
-            await _profileAccessor.SetAsync(stepContext.Context, userProfile, cancellationToken);
-
-            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text(finishMsg) }, cancellationToken);
+            await stepContext.Context.SendActivityAsync(finishMsg);
+            return await stepContext.EndDialogAsync(null, cancellationToken);
         }
 
     }

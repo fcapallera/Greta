@@ -1,4 +1,5 @@
-﻿using CoreBot.Utilities;
+﻿using CoreBot.Controllers;
+using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Newtonsoft.Json.Linq;
@@ -11,7 +12,9 @@ namespace CoreBot.Dialogs
     public class CardDialog : CancelAndHelpDialog
     {
         private readonly IStatePropertyAccessor<ConversationData> _conversationAccessor;
-        public CardDialog(string id, UserState userState, ConversationState conversationState) : base(id, userState)
+ 
+        public CardDialog(string id, UserController userController, ConversationState conversationState)
+            : base(id,userController)
         {
             _conversationAccessor = conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
         }

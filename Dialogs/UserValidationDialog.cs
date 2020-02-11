@@ -1,12 +1,13 @@
-﻿using CoreBot.Extensions;
-using CoreBot.Models;
+﻿using CoreBot.Controllers;
+using CoreBot.Extensions;
 using CoreBot.Store;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
-using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,11 +19,11 @@ namespace CoreBot.Dialogs
         private const string carouselMsg = "Which one of these customers do you want to validate?";
         private const string permissionMsg = "Which level of permission do you want the user to have? (sorted from highest to lowest)";
         private readonly IPrestashopApi PrestashopApi;
-        private readonly IServiceProvider ServiceProvider;
+        private readonly NotifyController NotifyController;
 
-        public UserValidationDialog(UserState userState, ConversationState conversationState, IPrestashopApi prestashopApi,
-            IServiceProvider serviceProvider) : 
-            base(nameof(UserValidationDialog), userState, conversationState)
+        public UserValidationDialog(ConversationState conversationState, IPrestashopApi prestashopApi,
+            UserController userController, NotifyController notifyController) : 
+            base(nameof(UserValidationDialog), userController, conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new TextPrompt("CustomerValidationPrompt",ValidateCustomerInputAsync));
@@ -37,9 +38,9 @@ namespace CoreBot.Dialogs
                 ValidateUserStepAsync
             }));
 
-            ServiceProvider = serviceProvider;
+            NotifyController = notifyController;
             PrestashopApi = prestashopApi;
-            PermissionLevel = SUPERUSER;
+            PermissionLevel = PermissionLevels.Superuser;
             InitialDialogId = nameof(WaterfallDialog);
         }
 
@@ -60,7 +61,7 @@ namespace CoreBot.Dialogs
                 ? (await PrestashopApi.GetCustomerByFirstName(name[0]))
                 : (await PrestashopApi.GetCustomerByFullName(name[0], name[1]));
 
-            if (customers.Customers.Length == 1)
+            if (customers.Customers.Count == 1)
             {
                 return await stepContext.NextAsync(customers.First().Id, cancellationToken);
             } 
@@ -78,11 +79,14 @@ namespace CoreBot.Dialogs
                 ? (int)stepContext.Result 
                 : CardUtils.GetValueFromAction<int>((string)stepContext.Result);
 
+            var permList = Enum.GetValues(typeof(PermissionLevels)).Cast<PermissionLevels>().ToList();
+            var permStrings = (from permission in permList select permission.GetDescription()).ToList();
+
             var promptOptions = new PromptOptions
             {
                 Prompt = MessageFactory.Text(permissionMsg),
                 RetryPrompt = MessageFactory.Text("Choose a value from the list below (sorted from highest to lowest)"),
-                Choices = ChoiceFactory.ToChoices(permissions)
+                Choices = ChoiceFactory.ToChoices(permStrings)
             };
 
             return await stepContext.PromptAsync(nameof(ChoicePrompt), promptOptions, cancellationToken);
@@ -91,14 +95,28 @@ namespace CoreBot.Dialogs
         private async Task<DialogTurnResult> ValidateUserStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var choice = (FoundChoice)stepContext.Result;
+            var permission = choice.Value.GetValueFromDescription<PermissionLevels>();
 
-            var profile = new Models.UserProfile()
+            var prestashopId = stepContext.GetValue<int>("id");
+
+            //If the user already asked for permission
+            if (await UserController.CheckForUserProfileAsync(prestashopId))
             {
-                Permission  = choice.Index,
-                PrestashopId = stepContext.GetValue<int>("id")
-            };
+                await UserController.ValidateUserAsync(prestashopId, (int)permission);
+                await NotifyController.NotifyValidation(prestashopId);
+            }
+            //If we're validating the user ahead of his first login
+            else
+            {
+                var profile = new Models.UserProfile()
+                {
+                    Permission = (int)permission,
+                    PrestashopId = prestashopId,
+                    Validated = true
+                };
 
-            AddUserProfile(profile);
+                await UserController.AddUserAsync(profile);
+            }
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(
                 "A new user has been added. He can now login and start using Greta!"),cancellationToken);
@@ -114,13 +132,13 @@ namespace CoreBot.Dialogs
             {
                 var collection = await PrestashopApi.GetCustomerByFullName(words[0],words[1]);
 
-                result = collection.Customers.Length > 0;
+                result = collection.Customers.Count > 0;
             }
             else if (words.Length == 1)
             {
                 var collection = await PrestashopApi.GetCustomerByFirstName(words[0]);
 
-                result = collection.Customers.Length > 0;
+                result = collection.Customers.Count > 0;
             }
 
             if (!result)
@@ -130,17 +148,6 @@ namespace CoreBot.Dialogs
             }
 
             return await Task.FromResult(result);
-        }
-
-        private void AddUserProfile(Models.UserProfile userProfile)
-        {
-            using (var scope = this.ServiceProvider.CreateScope())
-            {
-                var scopedService = scope.ServiceProvider.GetRequiredService<GretaDBContext>();
-
-                scopedService.Add(userProfile);
-                scopedService.SaveChanges();
-            }
         }
     }
 }

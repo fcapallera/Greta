@@ -23,17 +23,22 @@ namespace CoreBot.Dialogs
     {
         private const string validationMsg = "I've asked our Staff members to validate your account. You will receive a notification when it's done!";
 
+        //HELP MESSAGES
+        private const string EMAILSTEP = "The email associated to your VitrosepStore account is a unique identifier, If you type your email I will quickly identify who you are and we'll proceed to log you in!";
+        private const string PASSWORDSTEP = "To complete de verification you need to enter your password in the text box. If the password is there once you submit it you can always delete it so it's not on your screen anymore.";
+        private const string VALIDATIONSTEP = "A member of our staff needs to validate your profile. That means identifying your needs and set which features you will be able to access.";
+        private const string DEFAULT = "Logging in is something you have to do only once so we can retrieve your data (addresses, company, etc.) from VitrosepStore. Once you are logged in, you'll have access to new features as a registered user!";
+
         private readonly IPrestashopApi PrestashopApi;
         private readonly IConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
         private readonly NotifyController NotifyController;
-        private readonly UserController UserController;
         private const string CUSTOMER = "Customer";
         private string UserEmail;
 
-        public UserLoginDialog(UserState userState, ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration,
+        public UserLoginDialog(ConversationState conversationState, IPrestashopApi prestashopApi, IConfiguration configuration,
             IServiceProvider serviceProvider, NotifyController notifyController, UserController userController)
-            : base(nameof(UserLoginDialog), userState, conversationState)
+            : base(nameof(UserLoginDialog), userController, conversationState)
         {
             AddDialog(new TextPrompt("EmailValidator", ValidateEmailAsync));
             AddDialog(new TextPrompt("PasswordValidator", ValidatePasswordAsync));
@@ -41,7 +46,6 @@ namespace CoreBot.Dialogs
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                CheckPermissionStepAsync,
                 AskEmailStepAsync,
                 ConfirmPasswordStepAsync,
                 DisableCardStepAsync,
@@ -53,8 +57,7 @@ namespace CoreBot.Dialogs
             Configuration = configuration;
             ServiceProvider = serviceProvider;
             NotifyController = notifyController;
-            UserController = userController;
-            PermissionLevel = UNREGISTERED;
+            PermissionLevel = PermissionLevels.Unregistered;
             InitialDialogId = nameof(WaterfallDialog);
         }
 
@@ -62,8 +65,10 @@ namespace CoreBot.Dialogs
         {
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter your username (email)"),
-                RetryPrompt = MessageFactory.Text("This email does not exist. Please try again. You can cancel anytime.")
+                Prompt = MessageFactory.Text("Tell me, what e-mail do you have associated in your vitrosepStore account? " +
+                "Your e-mail works like an username, I will be able to find you in your database instantly!"),
+                RetryPrompt = MessageFactory.Text("Couldn't find that e-mail anywhere, make sure it's written correctly.\n" +
+                "So again, what's your e-mail?")
             };
 
             return await stepContext.PromptAsync("EmailValidator", promptOptions, cancellationToken);
@@ -138,7 +143,8 @@ namespace CoreBot.Dialogs
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation?"),
+                Prompt = MessageFactory.Text("Mmmm... I see your profile is not validated yet. You want me to contact "
+                + "a member of our staff so they can validate it for you?"),
                 RetryPrompt = MessageFactory.Text("Your profile is not validated yet, would you like to ask for validation? (Yes/No)")
             };
 
@@ -162,7 +168,9 @@ namespace CoreBot.Dialogs
             }
             else
             {
-                return await stepContext.EndDialogAsync(false, cancellationToken);
+                await stepContext.Context.SendActivityAsync("Ok then. Remember you can ask for validation "
+                    + "whenever you want, just ask me and I'll contact a member of our staff!");
+                return await stepContext.EndDialogAsync(null, cancellationToken);
             }
         }
 
@@ -181,12 +189,24 @@ namespace CoreBot.Dialogs
             var customer = (await PrestashopApi.GetCustomerByEmail(UserEmail)).First();
 
             string json = promptContext.Context.Activity.Text;
+            try
+            {
+                CardUtils.GetValueFromAction<string>(json);
+            }
+            catch (JsonReaderException)
+            {
+                await promptContext.Context.SendActivityAsync("Please, type your Vitrosep Store password on the textbox or cancel the operation! (You can do so by type **cancel** or **quit**)");
+                await promptContext.Context.SendActivityAsync(promptContext.Options.RetryPrompt);
+                return await Task.FromResult(false);
+            }
+
             var password = CardUtils.GetValueFromAction<string>(json);
+            bool isValid;
 
             //BCrypt algorythm for newer generated passwords
             if (customer.Password.Length == 60)
             {
-                return await Task.FromResult(BCrypt.Net.BCrypt.Verify(password, customer.Password));
+                isValid = BCrypt.Net.BCrypt.Verify(password, customer.Password);
             }
             //MD5 hashing for older generated passwords
             else
@@ -196,8 +216,16 @@ namespace CoreBot.Dialogs
                 byte[] bytes = provider.ComputeHash(Encoding.ASCII.GetBytes(salt + password));
                 string computedHash = BitConverter.ToString(bytes);
 
-                return await Task.FromResult(computedHash == customer.Password);
+                isValid = computedHash == customer.Password;
             }
+
+            if (!isValid)
+            {
+                await promptContext.Context.SendActivityAsync("Incorrect password, you must've got something wrong :(");
+                await promptContext.Context.SendActivityAsync(promptContext.Options.RetryPrompt);
+            }
+
+            return await Task.FromResult(isValid);
         }
 
         
@@ -205,6 +233,38 @@ namespace CoreBot.Dialogs
         {
             var user = await UserController.GetUserByPrestashopIdAsync(prestaId);
             return await Task.FromResult(user.Validated);
+        }
+
+        
+        protected override async Task ShowHelpAsync(DialogContext innerDc)
+        {
+            var dialog = innerDc.Stack[innerDc.Stack.Count - 1];
+
+            if(dialog.Id == WATERFALL)
+            {
+                var stepIndex = dialog.State["stepIndex"];
+
+                string helpMsg;
+
+                switch (stepIndex)
+                {
+                    case 0:
+                        helpMsg = EMAILSTEP;
+                        break;
+                    case 1:
+                        helpMsg = PASSWORDSTEP;
+                        break;
+                    case 3:
+                        helpMsg = VALIDATIONSTEP;
+                        break;
+                    default:
+                        helpMsg = DEFAULT;
+                        break;
+                }
+
+                await innerDc.Context.SendActivityAsync(helpMsg);
+
+            }
         }
     }
 }

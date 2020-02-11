@@ -3,6 +3,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,14 +12,6 @@ namespace CoreBot.Dialogs
 {
     public class PermissionDialog : ComponentDialog
     {
-        // Permission levels
-        protected const int SUPERUSER = 0;
-        protected const int VITROSEP = 1;
-        protected const int CUSTOMERS = 2;
-        protected const int REPRESENTATIVE = 3;
-        protected const int LEAD = 4;
-        protected const int UNREGISTERED = 5;
-        protected static readonly string[] permissions = { "Superuser", "Vitrosep", "Customer", "Representative", "Lead", "Unregistered" };
         private const string noPermission = "Sorry, you don't have privilege to use this functionality.";
 
         protected readonly UserController UserController;
@@ -31,7 +24,7 @@ namespace CoreBot.Dialogs
         protected async Task<DialogTurnResult> CheckPermissionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var user = await UserController.GetUserByBotIdAsync(stepContext.Context.Activity.From.Id);
-            if (user.Permission >= PermissionLevel)
+            if (user.Permission >= (int)PermissionLevel)
             {
                 return await stepContext.NextAsync(stepContext.Options, cancellationToken);
             }
@@ -42,20 +35,22 @@ namespace CoreBot.Dialogs
             }
         }
 
-        public int PermissionLevel { get; set; } = 5;
+        public PermissionLevels PermissionLevel { get; set; } = PermissionLevels.Superuser;
+    }
 
-        protected int ResolvePermission(string permission)
-        {
-            switch (permission)
-            {
-                case "Superuser": return SUPERUSER;
-                case "Vitrosep": return VITROSEP;
-                case "Customer": return CUSTOMERS;
-                case "Representative": return REPRESENTATIVE;
-                case "Lead": return LEAD;
-                case "Unregistered": return UNREGISTERED;
-                default: return -1;
-            }
-        }
+    public enum PermissionLevels : int
+    {
+        [Description("Superuser")]
+        Superuser = 0,
+        [Description("Vitrosep")]
+        Vitrosep = 1,
+        [Description("Customer")]
+        Customer = 2,
+        [Description("Representative")]
+        Representative = 3,
+        [Description("Lead")]
+        Lead = 4,
+        [Description("Unregistered")]
+        Unregistered = 5
     }
 }
