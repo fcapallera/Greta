@@ -66,7 +66,7 @@ namespace CoreBot.Controllers
             var conversationReference = _conversationReferences[user.BotUserId];
 
             async Task botCallBack(ITurnContext turnContext, CancellationToken cancellationToken) =>
-                    await turnContext.SendActivityAsync("Your account has been validated, you can start using Greta in its full potential!");
+                    await turnContext.SendActivityAsync("Your account has been validated.\n If you want to log in now say something like **I want to log in** or **Let me authenticate**, and you will be ready to enjoy all our services!\n You can always log in later.");
 
             await ((BotAdapter)_adapter).ContinueConversationAsync(_appId, conversationReference, botCallBack, default);
         }
