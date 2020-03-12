@@ -24,6 +24,20 @@ namespace CoreBot.Extensions
 
             return (list + "]");
         }
+
+        public static string ToFilterParameterList(this List<string> list)
+        {
+            if (list.Count == 0) throw new EmptyParameterListException("List cannot be empty");
+
+            string parameter = "%";
+
+            foreach (string element in list)
+            {
+                parameter += "[" + element + "]%";
+            }
+
+            return parameter;
+        }
     }
 
     public class EmptyParameterListException : Exception
