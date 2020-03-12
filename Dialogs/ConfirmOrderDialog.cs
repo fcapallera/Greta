@@ -1,4 +1,6 @@
 ﻿using CoreBot.Controllers;
+using CoreBot.Extensions;
+using CoreBot.Store;
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -12,13 +14,16 @@ namespace CoreBot.Dialogs
 {
     public class ConfirmOrderDialog : CardDialog
     {
+        private const string ACTION = "action";
         private const string noOrderMsg = "Sorry, you need to order something first.";
         private const string ignoreOrder = "Your order is still pending, you can confirm, cancel or add more products!";
+        private readonly PurchaseController PurchaseController;
+        private readonly IPrestashopApi PrestashopApi;
 
-        public ConfirmOrderDialog(UserController userController, ConversationState conversationState) 
-            : base(nameof(ConfirmOrderDialog),userController, conversationState)
+        public ConfirmOrderDialog(UserController userController, ConversationState conversationState, 
+            PurchaseController purchaseController) : base(nameof(ConfirmOrderDialog),userController, conversationState)
         {
-            /*AddDialog(new TextPrompt(nameof(TextPrompt)));
+            AddDialog(new TextPrompt(nameof(TextPrompt),CardJsonValidator));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -28,17 +33,18 @@ namespace CoreBot.Dialogs
                 DisableCardStepAsync,
                 ProcessValueStepAsync,
                 FinalStepAsync
-            }));*/
+            }));
 
             PermissionLevel = PermissionLevels.Representative;
             InitialDialogId = nameof(WaterfallDialog);
+            PurchaseController = purchaseController;
         }
 
-        /*private async Task<DialogTurnResult> CheckOrderStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> CheckOrderStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
+            var activeCart = await PurchaseController.GetActiveCartFromUser(stepContext.Context.Activity.From.Id);
 
-            if (userProfile.ProductCart == null)
+            if (activeCart == null)
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(noOrderMsg), cancellationToken);
                 return await stepContext.EndDialogAsync();
@@ -49,17 +55,19 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> ShowCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
+            var activeCart = await PurchaseController.GetActiveCartFromUser(stepContext.Context.Activity.From.Id);
 
-            var attachment = CardUtils.CreateCardFromOrder(userProfile);
+            var attachment = await activeCart.ToAdaptiveCard(PrestashopApi);
+            var activity = new Activity
+            {
+                Attachments = new List<Attachment>() { attachment },
+                Type = ActivityTypes.Message
+            };
 
             var opts = new PromptOptions
             {
-                Prompt = new Activity
-                {
-                    Attachments = new List<Attachment>() { attachment },
-                    Type = ActivityTypes.Message
-                }
+                Prompt = activity,
+                RetryPrompt = activity
             };
 
             return await stepContext.PromptAsync(nameof(TextPrompt), opts);
@@ -67,9 +75,8 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> ProcessValueStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var jobject = JObject.Parse((string)stepContext.Result);
-            var action = (string)jobject["action"];
-            stepContext.Values["action"] = action;
+            var action = CardUtils.GetValueFromAction<string>((string)stepContext.Result);
+            stepContext.Values[ACTION] = action;
 
             switch (action)
             {
@@ -81,33 +88,37 @@ namespace CoreBot.Dialogs
                         new PromptOptions { Prompt = MessageFactory.Text("Are you sure you want to " + msg + " this order?") }, cancellationToken);
 
                 default:
-                    await stepContext.Context.SendActivityAsync("TODO: Implement cathing text prompt redirection.");
                     return await stepContext.EndDialogAsync(null, cancellationToken);
             }
         }
         
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            string action = (string)stepContext.Values["action"];
+            string action = stepContext.GetValue<string>(ACTION);
 
             if ((bool)stepContext.Result)
             {
-                var filling = action == "confirmOrder" ? " sent to us " : " cancelled ";
+                var userId = stepContext.Context.Activity.From.Id;
 
-                var userProfile = await _profileAccessor.GetAsync(stepContext.Context, () => new UserProfile());
+                if (action == "confirmOrder")
+                {
+                    var cart = await PurchaseController.GetActiveCartFromUser(userId);
+                    //TODO [POST] METHOD PRESTASHOP
+                }
 
-                userProfile.ProductCart = null;
+                await PurchaseController.InactivateCartFromUser(userId);
 
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text("Your order was" + filling + "successfully!"), cancellationToken);
+                string filling = action == "confirmOrder" ? "sent" : "cancelled";
+
+                await stepContext.Context.SendActivityAsync(MessageFactory.Text("Your order was " + filling + " successfully!"), cancellationToken);
             }
             else
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(ignoreOrder), cancellationToken);
             }
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text(whatElse), cancellationToken);
-
+            
             return await stepContext.EndDialogAsync(null, cancellationToken);
-        }*/
+        }
+
     }
 }

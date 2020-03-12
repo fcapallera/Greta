@@ -132,6 +132,14 @@
                 "id": "submitButton2"
               },
               "title": "Cancel Order"
+            },
+            {
+              "type": "Action.Submit",
+              "data": {
+                "action": "keepShopping",
+                "id": "submitButton3"
+              },
+              "title": "Keep Shopping"
             }
           ]
         }
