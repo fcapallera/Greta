@@ -15,6 +15,9 @@ namespace CoreBot.Store.Entity
         [XmlElement("id_default_image")]
         public override Image Image { get; set; }
 
+        [XmlElement("reference")]
+        public string Reference { get; set; }
+
         [XmlElement("weight")]
         public float Weight { get; set; }
         
@@ -54,7 +57,7 @@ namespace CoreBot.Store.Entity
             var card = new AdaptiveCard("1.0");
             card.Body.Add(new AdaptiveTextBlock
             {
-                Text = GetNameByLanguage(CardUtils.ENGLISH),
+                Text = "**" + GetNameByLanguage(CardUtils.ENGLISH) + "**",
                 Weight = AdaptiveTextWeight.Bolder,
                 Size = AdaptiveTextSize.Large,
                 Wrap = true

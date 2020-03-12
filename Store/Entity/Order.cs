@@ -82,8 +82,24 @@ namespace CoreBot.Store.Entity
         [XmlElement("conversion_rate")]
         public float ConversionRate { get; set; }
 
-        /*[XmlElement("associations")]
-        public OrderRows OrderRows { get; set; }*/
+        [XmlElement("associations")]
+        public OrderRows OrderRows { get; set; }
+    }
+
+    [XmlRoot("prestashop")]
+    public class OrderCollection
+    {
+        [XmlArray("orders")]
+        [XmlArrayItem("order")]
+        public List<Order> Orders { get; set; }
+
+        public Order Last()
+        {
+            if (Orders.Count > 0)
+                return Orders[Orders.Count - 1];
+
+            else return null;
+        }
     }
 
     public class OrderRows
