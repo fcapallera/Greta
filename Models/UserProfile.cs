@@ -7,15 +7,8 @@ namespace CoreBot.Models
     {
         public UserProfile()
         {
+            Cart = new HashSet<Cart>();
             Naquestions = new HashSet<Naquestions>();
-            OrderLine = new HashSet<OrderLine>();
-        }
-
-        public UserProfile(int permission)
-        {
-            Permission = permission;
-            Naquestions = new HashSet<Naquestions>();
-            OrderLine = new HashSet<OrderLine>();
         }
 
         public int Id { get; set; }
@@ -25,7 +18,7 @@ namespace CoreBot.Models
         public int Permission { get; set; }
         public DateTime CreationDate { get; set; }
 
+        public ICollection<Cart> Cart { get; set; }
         public ICollection<Naquestions> Naquestions { get; set; }
-        public ICollection<OrderLine> OrderLine { get; set; }
     }
 }

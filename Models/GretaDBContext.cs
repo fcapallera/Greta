@@ -15,19 +15,35 @@ namespace CoreBot.Models
         {
         }
 
+        public virtual DbSet<Cart> Cart { get; set; }
         public virtual DbSet<Naquestions> Naquestions { get; set; }
         public virtual DbSet<OrderLine> OrderLine { get; set; }
+        public virtual DbSet<OrderRequest> OrderRequest { get; set; }
         public virtual DbSet<UserProfile> UserProfile { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Naquestions>(entity =>
+            modelBuilder.Entity<Cart>(entity =>
             {
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.Cart)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_UserCart_UserProfile");
+
                 entity.HasKey(e => e.Id);
 
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<Naquestions>(entity =>
+            {
                 entity.ToTable("NAQuestions");
 
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                
                 entity.Property(e => e.QuestionText)
                     .IsRequired()
                     .HasMaxLength(512)
@@ -38,22 +54,43 @@ namespace CoreBot.Models
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_NAQuestions_UserProfile");
-
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<OrderLine>(entity =>
             {
-                entity.HasOne(d => d.User)
+                entity.Property(e => e.Amount).HasDefaultValueSql("((1))");
+
+                entity.HasOne(d => d.Cart)
                     .WithMany(p => p.OrderLine)
-                    .HasForeignKey(d => d.UserId)
+                    .HasForeignKey(d => d.CartId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_OrderLine_UserProfile");
+                    .HasConstraintName("FK_OrderLine_OrderLine");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<OrderRequest>(entity =>
+            {
+                entity.Property(e => e.CreationDate).HasDefaultValueSql("(getdate())");
+
+                entity.HasOne(d => d.Cart)
+                    .WithMany(p => p.OrderRequest)
+                    .HasForeignKey(d => d.CartId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderRequest_Cart");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<UserProfile>(entity =>
             {
-                entity.HasKey(e => e.Id);
+                entity.Property(e => e.BotUserId)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.CreationDate)
                     .HasColumnType("date")
@@ -62,6 +99,8 @@ namespace CoreBot.Models
                 entity.Property(e => e.Permission).HasDefaultValueSql("((5))");
 
                 entity.Property(e => e.PrestashopId).HasColumnName("Prestashop_Id");
+
+                entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
             });
