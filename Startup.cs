@@ -68,6 +68,8 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddSingleton<UserLoginDialog>();
 
+            services.AddSingleton<CartToOrderDialog>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
@@ -77,7 +79,11 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddSingleton<QuestionController>();
 
+            services.AddSingleton<PurchaseController>();
+
             services.AddSingleton<PermissionDialog>();
+
+            services.AddSingleton<CartToOrderDialog>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, GretaBot<MainDialog>>();

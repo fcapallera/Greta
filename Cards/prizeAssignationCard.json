@@ -1,0 +1,147 @@
+{
+  "type": "AdaptiveCard",
+  "version": "1.2",
+  "body": [
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "size": "Large",
+                  "weight": "Bolder",
+                  "text": "PRIZE ASSIGNATION"
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "Image",
+                  "url": "https://adaptivecards.io/content/pending.png",
+                  "altText": "Pending",
+                  "height": "30px"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "size": "ExtraLarge",
+                  "text": "Order from:",
+                  "wrap": true
+                }
+              ],
+              "verticalContentAlignment": "Center"
+            },
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "Image",
+                  "url": "https://vitrosepstore.com/img/vitrosep-logo-1522319259.jpg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "FactSet",
+          "spacing": "Medium"
+        }
+      ],
+      "separator": true
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "weight": "Bolder",
+                  "text": "PRODUCT"
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "weight": "Bolder",
+                  "text": "PRIZE"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "separator": true
+    },
+    {
+      "type": "Container",
+      "items": [
+
+      ]
+
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ActionSet",
+          "actions": [
+            {
+              "type": "Action.Submit",
+              "data": {
+                "action": "confirmOrder",
+                "id": "submitButton1"
+              },
+              "title": "Confirm Prizes"
+            },
+            {
+              "type": "Action.Submit",
+              "data": {
+                "action": "cancelOrder",
+                "id": "submitButton2"
+              },
+              "title": "Cancel"
+            }
+          ]
+        }
+      ],
+      "separator": "true",
+      "spacing": "medium"
+    }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+}
