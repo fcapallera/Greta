@@ -50,7 +50,7 @@ namespace CoreBot.Models
 
                 var product = (await prestashopApi.GetProductById(orderLine.ProductId)).First();
 
-                AdaptiveTextBlock productText = new AdaptiveTextBlock(product.GetNameByLanguage(7));
+                AdaptiveTextBlock productText = new AdaptiveTextBlock(product.GetNameByLanguage(Languages.English));
                 productText.Wrap = true;
 
                 productColumn.Width = "stretch";

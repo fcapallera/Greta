@@ -145,7 +145,7 @@ namespace CoreBot.Dialogs
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text($"How many {product.GetNameByLanguage(7)} do you want to buy?"),
+                Prompt = MessageFactory.Text($"How many {product.GetNameByLanguage(Languages.English)} do you want to buy?"),
                 RetryPrompt = MessageFactory.Text("How many you want to buy? Just type a number!"),
             };
 
@@ -166,7 +166,7 @@ namespace CoreBot.Dialogs
             var product = await PrestashopApi.GetProductById(orderLine.ProductId);
 
             string orderString = orderLine.Amount.ToString() + (orderLine.Amount > 1 ? " units of " : " unit of ")
-                + product.First().GetNameByLanguage(7);
+                + product.First().GetNameByLanguage(Languages.English);
 
             return await stepContext.PromptAsync(nameof(ConfirmPrompt), 
                 new PromptOptions { Prompt = MessageFactory.Text(addToCartMsg + "\n- " + orderString) }, cancellationToken);

@@ -32,21 +32,21 @@ namespace CoreBot.Store.Entity
         [XmlArrayItem("language", typeof(LanguageTraduction))]
         public List<LanguageTraduction> Description { get; set; }
 
-        public string GetNameByLanguage(int language)
+        public string GetNameByLanguage(Languages language)
         {
             foreach(LanguageTraduction l in Name)
             {
-                if (l.Id == language) return l.Text;
+                if (l.Id == (int)language) return l.Text;
             }   
 
             return "";
         }
 
-        public string GetDescriptionByLanguage(int language)
+        public string GetDescriptionByLanguage(Languages language)
         {
             foreach (LanguageTraduction l in Description)
             {
-                if (l.Id == language) return l.Text;
+                if (l.Id == (int)language) return l.Text;
             }
 
             return "";
@@ -57,12 +57,12 @@ namespace CoreBot.Store.Entity
             var card = new AdaptiveCard("1.0");
             card.Body.Add(new AdaptiveTextBlock
             {
-                Text = "**" + GetNameByLanguage(CardUtils.ENGLISH) + "**",
+                Text = "**" + GetNameByLanguage(Languages.English) + "**",
                 Weight = AdaptiveTextWeight.Bolder,
                 Size = AdaptiveTextSize.Large,
                 Wrap = true
             });
-            card.Body.Add(new AdaptiveTextBlock(GetDescriptionByLanguage(CardUtils.ENGLISH))
+            card.Body.Add(new AdaptiveTextBlock(GetDescriptionByLanguage(Languages.English))
             {
                 Wrap = true
             });

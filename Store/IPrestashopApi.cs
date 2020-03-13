@@ -15,6 +15,9 @@ namespace CoreBot.Store
         [Get("/products?display=full")]
         Task<ProductCollection> GetAllProducts();
 
+        [Get("/products?display=full&filter[name]={wordParameters}")]
+        Task<ProductCollection> GetProductsByKeyWords(string wordParameters);
+
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[id]={id}")]
         Task<CustomerCollection> GetCustomerById(int id);
 
@@ -26,5 +29,22 @@ namespace CoreBot.Store
 
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[email]=%[{email}]%")]
         Task<CustomerCollection> GetCustomerByEmail(string email);
+
+        [Get("/customers?display=full&filter[name]={words}")]
+        Task<CustomerCollection> GetCustomerByWords(string words);
+
+        [Get("/carts?filter[id_customer]={customerId}&display=full")]
+        Task<CartCollection> GetCartsByCustomer(int customerId);
+
+        [Get("/carts?filter[id_customer]={customerId}&display=full")]
+        Task<OrderCollection> GetOrdersByCustomer(int customerId);
+    }
+
+    public enum Languages : int
+    {
+        Spanish = 1,
+        Catalan = 2,
+        French = 6,
+        English = 7
     }
 }

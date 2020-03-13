@@ -245,7 +245,7 @@ namespace CoreBot.Dialogs
             {
                 var product = (await prestashopApi.GetProductById(line.ProductId)).First();
 
-                productString += "- " + product.GetNameByLanguage(7) + "\n\n";
+                productString += "- " + product.GetNameByLanguage(Languages.English) + "\n\n";
             }
 
             return new RequestedInfo(cart.Id, customer.Company, productString);

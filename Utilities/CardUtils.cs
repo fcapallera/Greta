@@ -146,7 +146,7 @@ namespace CoreBot.Utilities
 
                 var productTitle = new AdaptiveTextBlock
                 {
-                    Text = "**" + product.GetNameByLanguage(7) + "**",
+                    Text = "**" + product.GetNameByLanguage(Languages.English) + "**",
                     Weight = AdaptiveTextWeight.Bolder,
                     Wrap = true
                 };

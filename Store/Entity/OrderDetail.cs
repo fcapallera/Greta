@@ -46,7 +46,7 @@ namespace CoreBot.Store.Entity
         [XmlElement("product_name")]
         public string ProductName
         {
-            get { return _productName ?? _product.GetNameByLanguage(_order.Customer.Language.Id); }
+            get { return _productName ?? _product.GetNameByLanguage(Languages.English); }
             set { _productName = value; }
         }
 
