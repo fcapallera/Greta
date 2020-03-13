@@ -1,4 +1,5 @@
-﻿using CoreBot.Models;
+﻿using CoreBot.Dialogs;
+using CoreBot.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -30,13 +31,15 @@ namespace CoreBot.Controllers
             }
         }
 
-        public async Task<List<Models.UserProfile>> GetUsersByPermissionLevelAsync(int permissionLevel)
+        public async Task<List<UserProfile>> GetUsersByPermissionLevelAsync(PermissionLevels permissionLevels)
         {
+            var permission = (int)permissionLevels;
+
             using (var context = ServiceProvider.CreateScope())
             {
                 var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
 
-                return await db.UserProfile.Where(u => u.Permission == permissionLevel && u.BotUserId != null).ToListAsync();
+                return await db.UserProfile.Where(u => u.Permission == permission && u.BotUserId != null).ToListAsync();
             }
         }
 
@@ -55,7 +58,7 @@ namespace CoreBot.Controllers
         }
 
 
-        public async Task<Models.UserProfile> GetUserByPrestashopIdAsync(int prestashopId)
+        public async Task<UserProfile> GetUserByPrestashopIdAsync(int prestashopId)
         {
             using (var context = ServiceProvider.CreateScope())
             {
@@ -66,7 +69,7 @@ namespace CoreBot.Controllers
         }
 
         // If no user is found, a null object is returned instead
-        public async Task<Models.UserProfile> GetUserByBotIdAsync(string botId)
+        public async Task<UserProfile> GetUserByBotIdAsync(string botId)
         {
             using (var context = ServiceProvider.CreateScope())
             {
