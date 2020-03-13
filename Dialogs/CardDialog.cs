@@ -2,6 +2,7 @@
 using CoreBot.Utilities;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
@@ -31,6 +32,23 @@ namespace CoreBot.Dialogs
             }
 
             return await stepContext.NextAsync(stepContext.Result, cancellationToken);
+        }
+
+        protected async Task<bool> CardJsonValidator(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            string json = promptContext.Context.Activity.Text;
+            try
+            {
+                CardUtils.GetValueFromAction<string>(json);
+            }
+            catch (JsonReaderException)
+            {
+                await promptContext.Context.SendActivityAsync("Please, type your Vitrosep Store password on the textbox or cancel the operation! (You can do so by type **cancel** or **quit**)");
+                await promptContext.Context.SendActivityAsync(promptContext.Options.RetryPrompt);
+                return await Task.FromResult(false);
+            }
+
+            return await Task.FromResult(true);
         }
     }
 }
