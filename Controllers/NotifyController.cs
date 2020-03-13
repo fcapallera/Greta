@@ -1,7 +1,9 @@
-﻿using CoreBot.Models;
+﻿using CoreBot.Dialogs;
+using CoreBot.Models;
 using CoreBot.Store;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
@@ -22,15 +24,20 @@ namespace CoreBot.Controllers
         private readonly ConcurrentDictionary<string, ConversationReference> _conversationReferences;
         private readonly IPrestashopApi PrestashopApi;
         private readonly UserController UserController;
+        private readonly BotState _ConversationState;
+        private readonly CartToOrderDialog CartToOrderDialog;
 
         public NotifyController(IBotFrameworkHttpAdapter adapter, ConcurrentDictionary<string,ConversationReference> references,
-            UserController userController, IConfiguration configuration, IPrestashopApi prestashopApi)
+            UserController userController, IConfiguration configuration, IPrestashopApi prestashopApi,
+            ConversationState conversationState, CartToOrderDialog cartToOrderDialog)
         {
             _adapter = adapter;
             _conversationReferences = references;
             UserController = userController;
             _appId = configuration["MicrosoftAppId"];
             PrestashopApi = prestashopApi;
+            _ConversationState = conversationState;
+            CartToOrderDialog = cartToOrderDialog;
 
             if (string.IsNullOrEmpty(_appId))
             {
@@ -40,7 +47,7 @@ namespace CoreBot.Controllers
 
         public async Task RequestValidationAsync(string id)
         {
-            var superusers = await UserController.GetUsersByPermissionLevelAsync(0);
+            var superusers = await UserController.GetUsersByPermissionLevelAsync(PermissionLevels.Superuser);
 
             var requestingUser = await UserController.GetUserByBotIdAsync(id);
 
@@ -71,6 +78,42 @@ namespace CoreBot.Controllers
                     " and you will be ready to enjoy all our services!\n\n You can always log in later.");
 
             await ((BotAdapter)_adapter).ContinueConversationAsync(_appId, conversationReference, botCallBack, default);
+        }
+
+
+        public async Task NotifyCustomerPurchase(Cart cart)
+        {
+            var user = (await PrestashopApi.GetCustomerById(cart.User.PrestashopId.Value)).First();
+
+            var vitrosep = await UserController.GetUsersByPermissionLevelAsync(PermissionLevels.Vitrosep);
+
+            foreach(UserProfile profile in vitrosep)
+            {
+                var conversationReference = _conversationReferences[profile.BotUserId];
+
+                await ((BotAdapter)_adapter).ContinueConversationAsync(_appId, conversationReference, CartCallBack, default);
+            }
+        }
+
+        public async Task CartCallBack(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            var conversationStateAccessors = _ConversationState.CreateProperty<DialogState>(nameof(DialogState));
+
+            var dialogSet = new DialogSet(conversationStateAccessors);
+            dialogSet.Add(this.CartToOrderDialog);
+
+            var dialogContext = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
+            var results = await dialogContext.ContinueDialogAsync(cancellationToken);
+
+            if (results.Status == DialogTurnStatus.Empty)
+            {
+                var user = await UserController.GetUserByBotIdAsync(turnContext.Activity.From.Id);
+
+                await dialogContext.BeginDialogAsync(CartToOrderDialog.Id, user, cancellationToken);
+                await _ConversationState.SaveChangesAsync(dialogContext.Context, false, cancellationToken);
+            }
+            else
+                await turnContext.SendActivityAsync("Starting proactive message bot call back");
         }
     }
 }
