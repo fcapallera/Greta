@@ -83,7 +83,8 @@ namespace CoreBot.Dialogs
             if (results.Any() && (results.First().Score > score) || intent == "None")
             {
                 stepContext.Values["Intent"] = "QnA";
-                return await stepContext.NextAsync(results.First().Answer, cancellationToken);
+                var answer = results.Length == 0 ? "Sorry I didn't understand that" : results.First().Answer;
+                return await stepContext.NextAsync(answer, cancellationToken);
             }
             else
             {
@@ -97,16 +98,15 @@ namespace CoreBot.Dialogs
         private async Task<DialogTurnResult> DispatchStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var intent = stepContext.GetValue<string>("Intent");
-            var recognizer = stepContext.Result as RecognizerResult ?? null;
+            
 
             switch (intent)
             {
                 case "ProductInformation":
                     // TODO (ARREGLAR-HO)
 
-                    var luisResult = (LuisResult)recognizer.Properties["luisResult"];
                     // Invoquem el mètode d'extensió que hem creat
-                    var productInfo = luisResult.ToProductInfo(Configuration);
+                    /*var productInfo = luisResult.ToProductInfo(Configuration);
                     if (productInfo != null)
                     {
                         var attachment = CardUtils.CreateCardFromProductInfo(productInfo);
@@ -119,12 +119,12 @@ namespace CoreBot.Dialogs
                     {
                         await stepContext.Context.SendActivityAsync(MessageFactory.Text("Sorry, we couldn't find a product matching your requirements."), cancellationToken);
                     }
-                    break;
+                    break;*/
 
                 case "OrderProduct":
+                    var recognizer = stepContext.Result as RecognizerResult ?? null;
                     // Invoquem el mètode d'extensió per extreure una comanda del json.
-                    var singleOrder = recognizer.ToSingleOrder();
-                    return await stepContext.BeginDialogAsync(nameof(OrderProductDialog), singleOrder, cancellationToken);
+                    return await stepContext.BeginDialogAsync(nameof(OrderProductDialog), recognizer, cancellationToken);
 
                 case "TechnicalAssistance":
                     NodeConstructor nbuilder = new NodeConstructor();
@@ -175,6 +175,9 @@ namespace CoreBot.Dialogs
                 case "ValidateUser":
                     return await stepContext.BeginDialogAsync(nameof(UserValidationDialog), null, cancellationToken);
 
+                case "CartToOrder":
+
+
                 case "QnA":
                     var answer = (string)stepContext.Result;
                     await stepContext.Context.SendActivityAsync(MessageFactory.Text(answer), cancellationToken);
@@ -188,7 +191,10 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            await stepContext.Context.SendActivityAsync("What else can I do for you today?");
+            if (stepContext.GetValue<string>("Intent")!="QnA")
+            {
+                await stepContext.Context.SendActivityAsync("What else can I do for you today?");
+            }
             return await stepContext.EndDialogAsync(null, cancellationToken);
         }
 

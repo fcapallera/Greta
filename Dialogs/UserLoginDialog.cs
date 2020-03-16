@@ -198,7 +198,7 @@ namespace CoreBot.Dialogs
                 await promptContext.Context.SendActivityAsync("Please, type your Vitrosep Store password on the textbox or cancel the operation! (You can do so by type **cancel** or **quit**)");
                 await promptContext.Context.SendActivityAsync(promptContext.Options.RetryPrompt);
                 return await Task.FromResult(false);
-            }
+            }   
 
             var password = CardUtils.GetValueFromAction<string>(json);
             bool isValid;
@@ -236,7 +236,7 @@ namespace CoreBot.Dialogs
         }
 
         
-        protected override async Task ShowHelpAsync(DialogContext innerDc)
+        protected override async Task DialogHelpMessage(DialogContext innerDc)
         {
             var dialog = innerDc.Stack[innerDc.Stack.Count - 1];
 
@@ -263,7 +263,6 @@ namespace CoreBot.Dialogs
                 }
 
                 await innerDc.Context.SendActivityAsync(helpMsg);
-
             }
         }
     }

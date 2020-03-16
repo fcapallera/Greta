@@ -70,14 +70,14 @@ namespace CoreBot.Dialogs
         }
 
 
-        protected virtual async Task ShowHelpAsync(DialogContext innerDc)
+        protected virtual async Task DialogHelpMessage(DialogContext innerDc)
         {
             var card = CardUtils.CreateCardFromJson("gretaWelcomeCard");
 
             var activity = new Activity
             {
-                Attachments = new List<Attachment>() {
-                    new Attachment()
+                Attachments = new List<Attachment> {
+                    new Attachment
                     {
                         Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(card)),
                         ContentType = "application/vnd.microsoft.card.adaptive"
@@ -87,6 +87,17 @@ namespace CoreBot.Dialogs
             };
 
             await innerDc.Context.SendActivityAsync(activity);
+        }
+        
+        private async Task ShowHelpAsync(DialogContext innerDc)
+        {
+            await DialogHelpMessage(innerDc);
+
+            if (innerDc.ActiveDialog.State.TryGetValue("options", out object promptOptions))
+            {
+                Activity prompt = ((PromptOptions)promptOptions).Prompt;
+                await innerDc.Context.SendActivityAsync(prompt);
+            }
         }
     }
 }

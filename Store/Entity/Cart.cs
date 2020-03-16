@@ -8,7 +8,20 @@ namespace CoreBot.Store.Entity
 {
     public class Cart : IIdentifiable
     {
+        [XmlElement("id")]
         public override int Id { get; set; }
+
+        [XmlIgnore]
+        public Customer Customer { get; set; }
+        
+        private int? _customerId { get; set; }
+
+        [XmlElement("id_customer")]
+        public int CustomerId
+        {
+            get { return _customerId ?? Customer.Id; }
+            set { _customerId = value; }
+        }
 
         //public int DeliveryAddressId { get; set; }
 
@@ -22,6 +35,22 @@ namespace CoreBot.Store.Entity
 
         [XmlElement("associations")]
         public CartRowCollection Rows { get; set; }
+    }
+
+    [XmlRoot("prestashop")]
+    public class CartCollection
+    {
+        [XmlArray("carts")]
+        [XmlArrayItem("cart")]
+        public List<Cart> Carts { get; set; }
+
+        public Cart Last()
+        {
+            if (Carts.Count > 0)
+                return Carts[Carts.Count - 1];
+
+            else return null;
+        }
     }
 
     public class CartRowCollection
@@ -42,6 +71,13 @@ namespace CoreBot.Store.Entity
         {
         }
 
+        public CartRow(Product product, int quantity)
+        {
+            Product = product;
+            Quantity = quantity;
+        }
+
+        [XmlIgnore]
         public Product Product;
 
         private int? _productId { get; set; }

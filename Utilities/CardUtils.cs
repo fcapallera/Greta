@@ -1,4 +1,6 @@
 ﻿using AdaptiveCards;
+using CoreBot.Dialogs;
+using CoreBot.Models;
 using CoreBot.Store;
 using CoreBot.Store.Entity;
 using Microsoft.Bot.Schema;
@@ -11,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace CoreBot.Utilities
 {
@@ -20,7 +23,6 @@ namespace CoreBot.Utilities
     public static class CardUtils
     {
         public const string sameCardMsg = "Don't use the same Submit Card twice. If you want to submit new data ask for the Card again.";
-        public const int ENGLISH = 7;
 
         public static Attachment CreateCardFromProductInfo(ProductInfo productInfo)
         {
@@ -39,56 +41,6 @@ namespace CoreBot.Utilities
                 Content = card
             };
             return resposta;
-        }
-
-        public static Attachment CreateCardFromOrder(UserProfile userProfile)
-        {
-            var card = CreateCardFromJson("confirmOrderCard");
-
-            //Ara hem convertit el JSON a un AdaptiveCard i editarem els fragments que ens interessen.
-
-            //Primer editem el FactSet (informació de l'usuari que sortirà a la fitxa).
-            var containerFact = (card.Body[1] as AdaptiveContainer);
-            var factSet = (containerFact.Items[1] as AdaptiveFactSet);
-            factSet.Facts.Add(new AdaptiveFact("Ordered by:", userProfile.Name));
-            factSet.Facts.Add(new AdaptiveFact("Company:", userProfile.Company));
-
-            //Ara editarem la informació que sortirà dels productes
-            var containerProducts = (card.Body[3] as AdaptiveContainer);
-
-            userProfile.ProductCart.Products.RemoveAll(item => item == null);
-
-            foreach (SingleOrder order in userProfile.ProductCart.Products)
-            {
-                AdaptiveColumnSet columns = new AdaptiveColumnSet();
-                AdaptiveColumn productColumn = new AdaptiveColumn();
-
-                AdaptiveTextBlock product = new AdaptiveTextBlock(order.Product);
-                product.Wrap = true;
-
-                productColumn.Width = "stretch";
-                productColumn.Items.Add(product);
-                columns.Columns.Add(productColumn);
-
-                AdaptiveColumn amountColumn = new AdaptiveColumn();
-
-                AdaptiveTextBlock amount = new AdaptiveTextBlock(order.AmountToString());
-                amount.Wrap = true;
-
-                amountColumn.Width = "auto";
-                amountColumn.Items.Add(amount);
-                columns.Columns.Add(amountColumn);
-
-                containerProducts.Items.Add(columns);
-            }
-
-            var attachment = new Attachment()
-            {
-                Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(card)),
-                ContentType = "application/vnd.microsoft.card.adaptive"
-            };
-
-            return attachment;
         }
 
         static public AdaptiveCard CreateCardFromJson(string json)
@@ -118,6 +70,125 @@ namespace CoreBot.Utilities
         {
             var jobject = JObject.Parse(card);
             return (string)jobject["id"];
+        }
+
+        public static AdaptiveCard RequestedInfoToCard(RequestedInfo requestedInfo)
+        {
+            var card = new AdaptiveCard("1.0");
+            card.Body.Add(new AdaptiveTextBlock
+            {
+                Text = requestedInfo.Name,
+                Weight = AdaptiveTextWeight.Bolder,
+                Size = AdaptiveTextSize.Large,
+                Wrap = true
+            });
+
+            card.Body.Add(new AdaptiveTextBlock
+            {
+                Text = requestedInfo.ProductList,
+                Wrap = true
+            });
+
+            return card;
+        }
+
+        public static List<Attachment> RequestedListToCarousel(List<RequestedInfo> requestedList)
+        {
+            var guid = Guid.NewGuid();
+            var attachmentList = new List<Attachment>();
+
+            foreach(RequestedInfo info in requestedList)
+            {
+                var card = new AdaptiveCard("1.0");
+                card.Body.Add(new AdaptiveTextBlock
+                {
+                    Text = info.Name,
+                    Weight = AdaptiveTextWeight.Bolder,
+                    Size = AdaptiveTextSize.Large,
+                    Wrap = true
+                });
+
+                card.Body.Add(new AdaptiveTextBlock
+                {
+                    Text = info.ProductList,
+                    Wrap = true
+                });
+
+                card.Actions.Add(new AdaptiveSubmitAction
+                {
+                    Title = "SELECT",
+                    DataJson = $@"{{ ""id"" : ""{guid.ToString()}"", ""action"" : ""{info.OrderRequestId}""}}"
+                });
+
+                var attachment = new Attachment()
+                {
+                    Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(card)),
+                    ContentType = "application/vnd.microsoft.card.adaptive"
+                };
+
+                attachmentList.Add(attachment);
+            }
+
+            return attachmentList;
+        }
+
+        static async public Task<Attachment> CreatePriceAssignationCard(Models.Cart cart, IPrestashopApi prestashopApi)
+        {
+            var card = CreateCardFromJson("prizeAssignationCard");
+
+            var container = card.Body[3] as AdaptiveContainer;
+
+            int index = 0;
+
+            foreach(OrderLine line in cart.OrderLine)
+            {
+                var product = (await prestashopApi.GetProductById(line.ProductId)).First();
+
+                var productTitle = new AdaptiveTextBlock
+                {
+                    Text = "**" + product.GetNameByLanguage(Languages.English) + "**",
+                    Weight = AdaptiveTextWeight.Bolder,
+                    Wrap = true
+                };
+
+                var columnSet = new AdaptiveColumnSet();
+
+                var column = new AdaptiveColumn
+                {
+                    Width = AdaptiveColumnWidth.Stretch
+                };
+
+                var reference = new AdaptiveTextBlock
+                {
+                    Text = product.Reference,
+                    Wrap = true
+                };
+
+                column.Items.Add(reference);
+
+                var columnInput = new AdaptiveColumn
+                {
+                    Width = AdaptiveColumnWidth.Auto
+                };
+
+                var input = new AdaptiveNumberInput
+                {
+                    Id = "InputCount" + index,
+                    Placeholder = "Price"
+                };
+                column.Items.Add(input);
+                columnSet.Columns.Add(column);
+                columnSet.Columns.Add(columnInput);
+                container.Items.Add(columnSet);
+                
+                index++;
+            }
+
+            return new Attachment()
+            {
+                Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(card)),
+                ContentType = "application/vnd.microsoft.card.adaptive"
+            };
         }
 
         static public string AddGuidToJson(string json)

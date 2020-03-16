@@ -10,12 +10,6 @@ namespace CoreBot.Models
         public int UserId { get; set; }
         public DateTime CreationDate { get; set; }
 
-
         public UserProfile User { get; set; }
-
-        public Naquestions()
-        {
-            CreationDate = DateTime.Now;
-        }
     }
 }

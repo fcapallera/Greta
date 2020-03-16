@@ -16,7 +16,7 @@
                   "type": "TextBlock",
                   "size": "Large",
                   "weight": "Bolder",
-                  "text": "**PRODUCT ORDER**"
+                  "text": "PRIZE ASSIGNATION"
                 }
               ]
             },
@@ -49,7 +49,7 @@
                 {
                   "type": "TextBlock",
                   "size": "ExtraLarge",
-                  "text": "Buying at:",
+                  "text": "Order from:",
                   "wrap": true
                 }
               ],
@@ -98,7 +98,7 @@
                 {
                   "type": "TextBlock",
                   "weight": "Bolder",
-                  "text": "AMOUNT"
+                  "text": "PRIZE"
                 }
               ]
             }
@@ -109,7 +109,10 @@
     },
     {
       "type": "Container",
-      "items": []
+      "items": [
+
+      ]
+
     },
     {
       "type": "Container",
@@ -123,7 +126,7 @@
                 "action": "confirmOrder",
                 "id": "submitButton1"
               },
-              "title": "Confirm Order"
+              "title": "Confirm Prizes"
             },
             {
               "type": "Action.Submit",
@@ -131,15 +134,7 @@
                 "action": "cancelOrder",
                 "id": "submitButton2"
               },
-              "title": "Cancel Order"
-            },
-            {
-              "type": "Action.Submit",
-              "data": {
-                "action": "keepShopping",
-                "id": "submitButton3"
-              },
-              "title": "Keep Shopping"
+              "title": "Cancel"
             }
           ]
         }

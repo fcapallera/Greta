@@ -14,13 +14,11 @@ namespace CoreBot.Dialogs
 {
     public class AskUserInfoDialog : ComponentDialog
     {
-        private readonly IStatePropertyAccessor<UserProfile> _profileAccessor;
-        private const string askCompanyMsg = "What company do you work for?";
         private const string finishMsg = "Thank you, what can I do for you today?";
         private const string registeredMsg = "Are you registered in our web store? (You need to be registered in order to get the most out of me!)";
         private const string waitForValidationMsg = "Thanks for registering.\nA VITROSEP administrator will validate your user soon, we will send you a notification asap!";
 
-        public AskUserInfoDialog(UserState userState, UserLoginDialog userLoginDialog)
+        public AskUserInfoDialog(UserLoginDialog userLoginDialog)
             : base(nameof(AskUserInfoDialog))
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
@@ -34,7 +32,6 @@ namespace CoreBot.Dialogs
             }));
             AddDialog(userLoginDialog);
 
-            _profileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
             InitialDialogId = nameof(WaterfallDialog);
         }
 

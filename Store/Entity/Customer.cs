@@ -48,7 +48,7 @@ namespace CoreBot.Store.Entity
             var card = new AdaptiveCard("1.0");
             card.Body.Add(new AdaptiveTextBlock()
             {
-                Text = FirstName + " " + LastName,
+                Text = "**"+GetFullName()+"**",
                 Weight = AdaptiveTextWeight.Bolder
             });
             card.Body.Add(new AdaptiveTextBlock()
