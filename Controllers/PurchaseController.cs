@@ -1,5 +1,6 @@
 ﻿using CoreBot.Models;
 using CoreBot.Store;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -24,9 +25,18 @@ namespace CoreBot.Controllers
 
         public async Task<Cart> GetActiveCartFromUser(string botId)
         {
-            var user = await UserController.GetUserByBotIdAsync(botId);
+            using (var context = ServiceProvider.CreateScope())
+            {
+                var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
 
-            return user.Cart.Where(c => c.Active).SingleOrDefault();
+                var user = await db.UserProfile.Where(u => u.BotUserId == botId)
+                    .Include(usr => usr.Cart)
+                        .ThenInclude(cart => cart.OrderLine)
+                    .FirstOrDefaultAsync();
+
+                return user.Cart.Where(c => c.Active)
+                    .SingleOrDefault();
+            }
         }
 
         public async Task<bool> HasCart(string botId)
@@ -42,15 +52,15 @@ namespace CoreBot.Controllers
 
         public async Task AddOrderLineToUser(string botId, OrderLine orderLine)
         {
-            var user = await UserController.GetUserByBotIdAsync(botId);
-
             using (var context = ServiceProvider.CreateScope())
             {
                 var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
 
+                var user = await db.UserProfile.Where(u => u.BotUserId == botId).FirstOrDefaultAsync();
+
                 var latestCart = user.Cart.OrderByDescending(c => c.Id).FirstOrDefault();
 
-                if (latestCart.Active)
+                if (latestCart != null && latestCart.Active)
                 {
                     latestCart.OrderLine.Add(orderLine);
                 }
@@ -58,7 +68,7 @@ namespace CoreBot.Controllers
                 {
                     var newCart = new Cart()
                     {
-                        Active = true
+                        Active = true,
                     };
                     newCart.OrderLine.Add(orderLine);
                     user.Cart.Add(newCart);
@@ -82,13 +92,15 @@ namespace CoreBot.Controllers
 
         public async Task InactivateCartFromUser(string botId)
         {
-            var lastCart = await GetActiveCartFromUser(botId);
-
             using(var scope = ServiceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<GretaDBContext>();
 
-                lastCart.Active = false;
+                var user = await db.UserProfile.Where(u => u.BotUserId == botId).FirstOrDefaultAsync();
+
+                var cart = user.Cart.Where(c => c.Active).SingleOrDefault();
+
+                cart.Active = false;
 
                 await db.SaveChangesAsync();
             }
