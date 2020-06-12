@@ -105,5 +105,12 @@ namespace CoreBot.Store.Entity
             get { return Elements; }
             set { Elements = value; }
         }
+
+        public ProductCollection(List<Product> products)
+        {
+            Products = products;
+        }
+
+        public ProductCollection() { }
     }
 }
