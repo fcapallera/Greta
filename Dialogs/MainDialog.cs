@@ -133,10 +133,10 @@ namespace CoreBot.Dialogs
                     return await stepContext.BeginDialogAsync(nameof(TechnicalAssistanceDialog), arrel, cancellationToken);
 
                 case "ConfirmCart":
-                    return await stepContext.BeginDialogAsync(nameof(ConfirmOrderDialog), cancellationToken);
+                    return await stepContext.BeginDialogAsync(nameof(ConfirmOrderDialog), null, cancellationToken);
 
                 case "AddProductInfo":
-                    return await stepContext.BeginDialogAsync(nameof(AddProductInfoDialog), cancellationToken);
+                    return await stepContext.BeginDialogAsync(nameof(AddProductInfoDialog), null, cancellationToken);
 
                 case "CheckProducts":
                     var task = DisplayAllProductsAsync(stepContext,cancellationToken);
