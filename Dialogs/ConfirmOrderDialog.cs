@@ -21,7 +21,7 @@ namespace CoreBot.Dialogs
         private readonly IPrestashopApi PrestashopApi;
 
         public ConfirmOrderDialog(UserController userController, ConversationState conversationState, 
-            PurchaseController purchaseController) : base(nameof(ConfirmOrderDialog),userController, conversationState)
+            PurchaseController purchaseController, IPrestashopApi prestashopApi) : base(nameof(ConfirmOrderDialog),userController, conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt),CardJsonValidator));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
@@ -38,6 +38,7 @@ namespace CoreBot.Dialogs
             PermissionLevel = PermissionLevels.Representative;
             InitialDialogId = nameof(WaterfallDialog);
             PurchaseController = purchaseController;
+            PrestashopApi = prestashopApi;
         }
 
         private async Task<DialogTurnResult> CheckOrderStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -103,7 +104,10 @@ namespace CoreBot.Dialogs
                 if (action == "confirmOrder")
                 {
                     var cart = await PurchaseController.GetActiveCartFromUser(userId);
-                    //TODO [POST] METHOD PRESTASHOP
+                    //var order = await Store.Entity.Order.BuildOrderAsync(cart, PrestashopApi);
+
+                    //await PrestashopApi.PostOrder(order);
+                    
                 }
 
                 await PurchaseController.InactivateCartFromUser(userId);

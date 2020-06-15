@@ -29,11 +29,11 @@ namespace CoreBot.Extensions
         {
             if (list.Count == 0) throw new EmptyParameterListException("List cannot be empty");
 
-            string parameter = "%";
+            string parameter = "";
 
             foreach (string element in list)
             {
-                parameter += "[" + element + "]%";
+                parameter += "&filter[name]=%[" + element + "]%";
             }
 
             return parameter;

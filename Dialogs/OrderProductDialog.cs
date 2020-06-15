@@ -37,7 +37,8 @@ namespace CoreBot.Dialogs
             : base(nameof(OrderProductDialog),userController,conversationState)
         {
             AddDialog(new TextPrompt(nameof(TextPrompt)));
-            AddDialog(new TextPrompt("TextValidator", ValidateQuantityAsync));
+            AddDialog(new TextPrompt("CardValidator",CardJsonValidator));
+            AddDialog(new NumberPrompt<int>(nameof(NumberPrompt<int>)));
             AddDialog(new TextPrompt("ProductValidator", ValidateProductAsync));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
@@ -65,14 +66,14 @@ namespace CoreBot.Dialogs
 
             var orderLine = new OrderLine();
 
-            var product = luisResult.Entities["Product"]?.FirstOrDefault()?.ToString();
+            var product = luisResult.Entities["Product"]?.FirstOrDefault()?.FirstOrDefault()?.ToString();
             var quantity = (int?)luisResult.Entities["number"]?.FirstOrDefault();
 
             var words = product.Split(new char[] { ' ' }).ToList();
 
-            var products = await PrestashopApi.GetProductsByKeyWords(words.ToFilterParameterList());
+            var products = await GetProductsFromListAsync(words);
 
-            if(products.Products.Count > 0)
+            if(products != null)
             {
                 stepContext.Values[FOUNDPRODUCT] = true;
 
@@ -110,6 +111,9 @@ namespace CoreBot.Dialogs
 
         private async Task<DialogTurnResult> SelectionCardStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            var orderLine = stepContext.GetValue<OrderLine>(ORDER);
+            if (orderLine.ProductId != -1) return await stepContext.NextAsync(null, cancellationToken);
+
             List<string> wordList;
             if (stepContext.Values.ContainsKey(WORDLIST))
             {
@@ -120,7 +124,7 @@ namespace CoreBot.Dialogs
                 wordList = ((string)stepContext.Result).Split(new char[] { ' ' }).ToList();
             }
 
-            var products = await PrestashopApi.GetProductsByKeyWords(wordList.ToFilterParameterList());
+            var products = await GetProductsFromListAsync(wordList);
 
             var reply = stepContext.Context.Activity.CreateReply();
             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
@@ -129,7 +133,7 @@ namespace CoreBot.Dialogs
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(chooseMsg), cancellationToken);
             await stepContext.Context.SendActivityAsync(reply,cancellationToken);
 
-            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("")});
+            return await stepContext.PromptAsync("CardValidator", new PromptOptions { Prompt = MessageFactory.Text("")});
         }
 
         private async Task<DialogTurnResult> AmountStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -151,7 +155,7 @@ namespace CoreBot.Dialogs
 
             if (orderLine.Amount == -1)
             {
-                return await stepContext.PromptAsync("TextValidator", promptOptions, cancellationToken);
+                return await stepContext.PromptAsync(nameof(NumberPrompt<int>), promptOptions, cancellationToken);
             }
             else
             {
@@ -162,6 +166,11 @@ namespace CoreBot.Dialogs
         private async Task<DialogTurnResult> ConfirmLineStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var orderLine = stepContext.GetValue<OrderLine>(ORDER);
+
+            if(orderLine.Amount == -1)
+            {
+                orderLine.Amount = (int)stepContext.Result;
+            }
 
             var product = await PrestashopApi.GetProductById(orderLine.ProductId);
 
@@ -204,5 +213,28 @@ namespace CoreBot.Dialogs
             return await Task.FromResult(int.TryParse(promptContext.Context.Activity.Text, out _));
         }
 
+        private async Task<ProductCollection> GetProductsFromListAsync(List<string> wordList)
+        {
+            List<Product> intersection = new List<Product>();
+            List<Product> union = new List<Product>();
+
+            foreach(string word in wordList)
+            {
+                if (word == wordList.First()) intersection.AddRange((await PrestashopApi.GetProductByName(word)).Products);
+                else
+                {
+                    var products = await PrestashopApi.GetProductByName(word);
+                    intersection = intersection.Intersect(products.Products).ToList();
+
+                    union.AddRange(products.Products);
+                }
+            }
+
+            if (intersection.Count > 0) return new ProductCollection(intersection);
+            else
+            {
+                return new ProductCollection(union.GroupBy(x => x.Id).Select(x => x.First()).ToList());
+            }
+        }
     }
 }

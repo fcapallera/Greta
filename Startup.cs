@@ -20,6 +20,9 @@ using CoreBot.Models;
 using System.Collections.Concurrent;
 using Microsoft.Bot.Schema;
 using CoreBot.Controllers;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -101,6 +104,7 @@ namespace Microsoft.BotBuilderSamples
                 {
                     ContentSerializer = new XmlContentSerializer()
                 })
+                .ConfigureHttpClient(c => new HttpClient(new UriQueryUnescapingHandler()))
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(storeUrl))
                 .ConfigureHttpClient(c => c.DefaultRequestHeaders.Add("Authorization", "Basic " + encoded));
 
@@ -126,4 +130,29 @@ namespace Microsoft.BotBuilderSamples
             app.UseMvc();
         }
     }
+
+
+    public class UriQueryUnescapingHandler : DelegatingHandler
+    {
+        public UriQueryUnescapingHandler()
+            : base(new HttpClientHandler()) { }
+        public UriQueryUnescapingHandler(HttpMessageHandler innerHandler)
+            : base(innerHandler)
+        { }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var uri = request.RequestUri;
+            //You could also simply unescape the whole uri.OriginalString
+            //but i don´t recommend that, i.e only fix what´s broken
+            var unescapedQuery = Uri.UnescapeDataString(uri.Query);
+
+            var userInfo = string.IsNullOrWhiteSpace(uri.UserInfo) ? "" : $"{uri.UserInfo}@";
+            var scheme = string.IsNullOrWhiteSpace(uri.Scheme) ? "" : $"{uri.Scheme}://";
+
+            request.RequestUri = new Uri($"{scheme}{userInfo}{uri.Authority}{uri.AbsolutePath}{unescapedQuery}{uri.Fragment}");
+            return base.SendAsync(request, cancellationToken);
+        }
+    }
+
 }

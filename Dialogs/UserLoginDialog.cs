@@ -114,14 +114,7 @@ namespace CoreBot.Dialogs
             {
                 if(await CheckForValidationAsync(customer.Id))
                 {
-                    using (var context = ServiceProvider.CreateScope())
-                    {
-                        var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
-
-                        var user = await UserController.GetUserByPrestashopIdAsync(customer.Id);
-                        user.BotUserId = stepContext.Context.Activity.From.Id;
-                        await db.SaveChangesAsync();
-                    }
+                    await UserController.UpdateBotId(customer.Id, stepContext.Context.Activity.From.Id);
 
                     await stepContext.Context.SendActivityAsync("Login Successful");
 
@@ -170,6 +163,7 @@ namespace CoreBot.Dialogs
             {
                 await stepContext.Context.SendActivityAsync("Ok then. Remember you can ask for validation "
                     + "whenever you want, just ask me and I'll contact a member of our staff!");
+                await stepContext.Context.SendActivityAsync("What can I do for you today?");
                 return await stepContext.EndDialogAsync(null, cancellationToken);
             }
         }

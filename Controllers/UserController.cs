@@ -68,6 +68,20 @@ namespace CoreBot.Controllers
             }
         }
 
+        public async Task UpdateBotId(int prestaId, string botId)
+        {
+            using (var context = ServiceProvider.CreateScope())
+            {
+                var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
+
+                var user = await db.UserProfile.Where(u => u.PrestashopId.Value == prestaId).FirstOrDefaultAsync();
+
+                user.BotUserId = botId;
+
+                await db.SaveChangesAsync();
+            }
+        }
+
         // If no user is found, a null object is returned instead
         public async Task<UserProfile> GetUserByBotIdAsync(string botId)
         {
