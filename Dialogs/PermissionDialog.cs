@@ -24,7 +24,8 @@ namespace CoreBot.Dialogs
         protected async Task<DialogTurnResult> CheckPermissionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var user = await UserController.GetUserByBotIdAsync(stepContext.Context.Activity.From.Id);
-            if (user != null && user.Permission >= (int)PermissionLevel)
+            var userPermission = (int)PermissionLevel;
+            if (user != null && user.Permission <= userPermission)
             {
                 return await stepContext.NextAsync(stepContext.Options, cancellationToken);
             }
@@ -35,7 +36,7 @@ namespace CoreBot.Dialogs
             }
         }
 
-        public PermissionLevels PermissionLevel { get; set; } = PermissionLevels.Superuser;
+        public PermissionLevels PermissionLevel { get; set; }
     }
 
     public enum PermissionLevels : int
