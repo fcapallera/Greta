@@ -30,7 +30,7 @@ namespace CoreBot.Models
         {
             var card = CardUtils.CreateCardFromJson("confirmOrderCard");
 
-            var user = (await prestashopApi.GetCustomerById(UserId)).First();
+            var user = (await prestashopApi.GetCustomerById(User.PrestashopId.Value)).First();
 
             //Ara hem convertit el JSON a un AdaptiveCard i editarem els fragments que ens interessen.
 
