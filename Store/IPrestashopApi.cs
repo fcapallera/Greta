@@ -15,7 +15,7 @@ namespace CoreBot.Store
         [Get("/products?display=full")]
         Task<ProductCollection> GetAllProducts();
 
-        [Get("/products?display=full&filter[name]={wordParameters}")]
+        [Get("/products?display=full{wordParameters}")]
         Task<ProductCollection> GetProductsByKeyWords(string wordParameters);
 
         [Get("/customers?display=[id,id_lang,passwd,lastname,firstname,email,company,date_upd]&filter[id]={id}")]
@@ -38,6 +38,32 @@ namespace CoreBot.Store
 
         [Get("/carts?filter[id_customer]={customerId}&display=full")]
         Task<OrderCollection> GetOrdersByCustomer(int customerId);
+
+        [Get("/addresses?filter[id_customer]={customerId}&display=full")]
+        Task<Address> GetAddressByCustomer(int customerId);
+
+        [Get("/carts?schema=blank")]
+        Task<PrestashopCart> GetBlankCart();
+
+        [Get("/orders?schema=blank")]
+        Task<PrestashopOrder> GetBlankOrder();
+
+        [Post("/carts")]
+        Task<Cart> PostCart([Body]PrestashopCart prestaCart);
+
+        [Post("/orders")]
+        Task<Cart> PostOrder([Body]PrestashopOrder order);
+
+
+        //Rudimentary solution to the parsing parameters problem
+        [Get("/products?display=full&filter[name]=%[{product1}]%")]
+        Task<ProductCollection> GetProductByOneParam(string product1);
+
+        [Get("/products?display=full&filter[name]=%[{product1}]%&filter[name]=%[{product2}]%")]
+        Task<ProductCollection> GetProductByTwoParam(string product1, string product2);
+
+        [Get("/products?display=full&filter[name]=%[{product1}]%&filter[name]=%[{product2}]%&filter[name]=%[{product3}]%")]
+        Task<ProductCollection> GetProductByThreeParam(string product1, string product2, string product3);
     }
 
     public enum Languages : int
