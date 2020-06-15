@@ -25,7 +25,7 @@ namespace CoreBot.Dialogs
             var conversationData = await _conversationAccessor.GetAsync(stepContext.Context, () => new ConversationData());
 
             var result = (string)stepContext.Result;
-            if (result.StartsWith('{'))
+            if (result != null && result.StartsWith('{'))
             {
                 var guid = CardUtils.GetGuidFromResult(result);
                 conversationData.DisabledCards.Add(guid, DateTime.Now);
