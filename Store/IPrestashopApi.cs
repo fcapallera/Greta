@@ -6,10 +6,10 @@ namespace CoreBot.Store
 {
     public interface IPrestashopApi
     {
-        [Get("/products?display=[id,name,description,id_default_image]&filter[name]=%[{product}]%")]
+        [Get("/products?display=[id,name,description,id_default_image,reference]&filter[name]=%[{product}]%")]
         Task<ProductCollection> GetProductByName(string product);
 
-        [Get("/products?display=[id,name,description,id_default_image]&filter[id]={id}%")]
+        [Get("/products?display=[id,name,description,id_default_image,reference]&filter[id]={id}%")]
         Task<ProductCollection> GetProductById(int id);
 
         [Get("/products?display=full")]
@@ -40,19 +40,13 @@ namespace CoreBot.Store
         Task<OrderCollection> GetOrdersByCustomer(int customerId);
 
         [Get("/addresses?filter[id_customer]={customerId}&display=full")]
-        Task<Address> GetAddressByCustomer(int customerId);
-
-        [Get("/carts?schema=blank")]
-        Task<PrestashopCart> GetBlankCart();
-
-        [Get("/orders?schema=blank")]
-        Task<PrestashopOrder> GetBlankOrder();
+        Task<AddressCollection> GetAddressByCustomer(int customerId);
 
         [Post("/carts")]
-        Task<Cart> PostCart([Body]PrestashopCart prestaCart);
+        Task<PostedCart> PostCart([Body]CartToPost prestaCart);
 
         [Post("/orders")]
-        Task<Cart> PostOrder([Body]PrestashopOrder order);
+        Task<PostedOrder> PostOrder([Body]OrderToPost order);
 
 
         //Rudimentary solution to the parsing parameters problem

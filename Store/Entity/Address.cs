@@ -6,12 +6,15 @@ using System.Xml.Serialization;
 
 namespace CoreBot.Store.Entity
 {
-    public class Address
+    public class Address : IIdentifiable
     {
-        [XmlElement("id")]
-        public int Id { get; set; }
+        public Address() { }
 
-        //TODO COUNTRY
+        [XmlElement("id")]
+        public override int Id { get; set; }
+
+        [XmlElement("id_country")]
+        public int CountryId { get; set; }
 
         [XmlElement("alias")]
         public string Alias { get; set; }
@@ -22,7 +25,24 @@ namespace CoreBot.Store.Entity
         [XmlElement("firstname")]
         public string FirstName { get; set; }
 
+        [XmlElement("address1")]
+        public string Address1 { get; set; }
+
         [XmlElement("city")]
         public string City { get; set; }
     }
+
+    [XmlRoot("prestashop")]
+    public class AddressCollection
+    {
+        [XmlArray("addresses")]
+        [XmlArrayItem("address", typeof(Address))]
+        public List<Address> Addresses { get; set; }
+
+        public Address First()
+        {
+            return Addresses.FirstOrDefault();
+        }
+    }
+
 }
