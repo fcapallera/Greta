@@ -104,10 +104,7 @@ namespace CoreBot.Dialogs
                 if (action == "confirmOrder")
                 {
                     var cart = await PurchaseController.GetActiveCartFromUser(userId);
-                    //var order = await Store.Entity.Order.BuildOrderAsync(cart, PrestashopApi);
-
-                    //await PrestashopApi.PostOrder(order);
-                    
+                    var order = await Store.Entity.PostOrder.BuildOrderAsync(cart, PrestashopApi);
                 }
 
                 await PurchaseController.InactivateCartFromUser(userId);
@@ -119,10 +116,10 @@ namespace CoreBot.Dialogs
             else
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(ignoreOrder), cancellationToken);
-            }
+            } 
+
             
             return await stepContext.EndDialogAsync(null, cancellationToken);
         }
-
     }
 }

@@ -194,10 +194,7 @@ namespace CoreBot.Dialogs
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(notAddedMsg), cancellationToken);
             }
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text(whatElse), cancellationToken);
-
-
+            
             return await stepContext.EndDialogAsync((bool)stepContext.Result, cancellationToken);
         }
 

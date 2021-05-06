@@ -18,8 +18,6 @@ namespace CoreBot.Controllers
             ServiceProvider = serviceProvider;
         }
 
-        //TO_DO TFG EXPLICAR FUNCIONS ASÍNCRONES
-
         public async Task AddUserAsync(Models.UserProfile userProfile)
         {
             using (var context = ServiceProvider.CreateScope())

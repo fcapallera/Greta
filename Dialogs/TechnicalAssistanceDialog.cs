@@ -88,10 +88,9 @@ namespace CoreBot.Dialogs
         }
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var choice = (FoundChoice)stepContext.Result;
             var nodeActual = stepContext.GetValue<NodeDecisio>("Node");
 
-            if(nodeActual.fills.Count == 0)
+            if (nodeActual.fills.Count == 0)
             {
                 var question = (string)stepContext.Result;
 
@@ -101,6 +100,7 @@ namespace CoreBot.Dialogs
             }
             else
             {
+                var choice = (FoundChoice)stepContext.Result;
                 return await stepContext.ReplaceDialogAsync(nameof(TechnicalAssistanceDialog), nodeActual.ObtenirNode(choice.Value), cancellationToken);
             }
         }

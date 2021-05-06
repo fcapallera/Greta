@@ -56,7 +56,9 @@ namespace CoreBot.Controllers
             {
                 var db = context.ServiceProvider.GetRequiredService<GretaDBContext>();
 
-                var user = await db.UserProfile.Where(u => u.BotUserId == botId).FirstOrDefaultAsync();
+                var user = await db.UserProfile.Where(u => u.BotUserId == botId)
+                    .Include(usr => usr.Cart)
+                    .FirstOrDefaultAsync();
 
                 var latestCart = user.Cart.OrderByDescending(c => c.Id).FirstOrDefault();
 
@@ -96,7 +98,9 @@ namespace CoreBot.Controllers
             {
                 var db = scope.ServiceProvider.GetRequiredService<GretaDBContext>();
 
-                var user = await db.UserProfile.Where(u => u.BotUserId == botId).FirstOrDefaultAsync();
+                var user = await db.UserProfile.Where(u => u.BotUserId == botId)
+                    .Include(usr => usr.Cart)
+                    .FirstOrDefaultAsync();
 
                 var cart = user.Cart.Where(c => c.Active).SingleOrDefault();
 

@@ -1,5 +1,4 @@
-﻿using CoreBot.Store.Entity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace CoreBot.Models
